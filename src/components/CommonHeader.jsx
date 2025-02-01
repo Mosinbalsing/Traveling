@@ -1,3 +1,4 @@
+import { ChevronRight } from "lucide-react";
 import React from "react";
 import { Link } from "react-router-dom";
 
@@ -6,7 +7,7 @@ function PageHeader({ title, breadcrumbs }) {
     <div className="relative h-[300px] w-full overflow-hidden mt-[-46px]">
       {/* Background Image */}
       <img
-        src="/images/main-slider/image-2.jpg"
+        src="/images/bg/3.jpg"
         alt="Services background"
         className="absolute inset-0 h-full w-full object-cover brightness-75"
       />
@@ -19,14 +20,14 @@ function PageHeader({ title, breadcrumbs }) {
         <nav aria-label="Breadcrumb" className= "bgt absolute bottom-0 px-4 h-[50px] flex justify-center">
           <ol className="flex items-center space-x-2">
             {breadcrumbs.map((item, index) => (
-              <li key={index} className="flex items-center">
+              <li key={index} className="flex items-center font-bold text-[14px]">
                 <Link
                   to={item.path}
                   className={`text-sm ${index === breadcrumbs.length - 1 ? "text-orange-500" : "text-white hover:text-orange-300"}`}
                 >
                   {item.label}
                 </Link>
-                {index < breadcrumbs.length - 1 && <span className="ml-2 text-white">{">"}</span>}
+                {index < breadcrumbs.length - 1 && <span className="ml-2 text-white">{<ChevronRight />}</span>}
               </li>
             ))}
           </ol>

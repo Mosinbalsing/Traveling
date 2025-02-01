@@ -7,8 +7,8 @@ const Services = () => {
       <PageHeader 
   title="Services" 
   breadcrumbs={[
-    { path: "/", label: "Home" },
-    { path: "/services", label: "Services" }
+    { path: "/", label: "HOME" },
+    { path: "/services", label: "SERVICES" }
   ]}
 />
 

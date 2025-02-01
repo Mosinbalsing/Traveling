@@ -8,8 +8,8 @@ const About = () => {
       <PageHeader 
   title="Booking" 
   breadcrumbs={[
-    { path: "/", label: "Home" },
-    { path: "/booking", label: "Booking" }
+    { path: "/", label: "HOME" },
+    { path: "/booking", label: "BOOKING" }
   ]}
 />
       < CarBookingForm/>

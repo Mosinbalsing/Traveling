@@ -52,7 +52,9 @@ const Navbar = () => {
             </div>
             <div className="phone flex gap-3 items-center">
               <MdOutlineMailOutline className="text-white" />
-              <p className="text-white text-sm md:text-base">info@carhire.com</p>
+              <p className="text-white text-sm md:text-base">
+                info@carhire.com
+              </p>
             </div>
           </div>
         </div>
@@ -61,10 +63,10 @@ const Navbar = () => {
       {/* Navigation Bar */}
       <div className="w-full flex justify-center items-center">
         <nav
-          className={`h-[100px] w-full  z-10 rounded-none  bg-white shadow-lg flex justify-between md:justify-around items-center mt-[-55px] transition-all duration-500 ease-in-out ${
-            isFixed
-              ? "fixed top-0 left-0 w-[100%] max-w-[1600px] rounded-none mt-[0px] animate__animated animate__fadeInDown z-30"
-              : "aos-init aos-animate md:rounded-[50px] md:w-[900px]"
+          className={`h-[100px] w-full z-10 shadow-lg flex justify-between md:justify-around items-center transition-all duration-500 ease-in-out ${
+            location.pathname === "/"
+              ? "bg-white text-gray-600 md:w-[900px] md:rounded-[50px] mt-[-55px]"
+              : "bg-white text-gray-600 w-full fixed top-0 left-0"
           }`}
           data-aos={isFixed ? "fade-down" : ""}
         >
