@@ -64,7 +64,9 @@ const Navbar = () => {
       <div className="w-full flex justify-center items-center">
         <nav
           className={`h-[100px] w-full z-10 shadow-lg flex justify-between md:justify-around items-center transition-all duration-500 ease-in-out ${
-            location.pathname === "/"
+            isFixed
+              ? "fixed top-0 left-0 w-[100%] max-w-[1600px] rounded-none mt-[0px] animate__animated animate__fadeInDown z-30 bg-white"
+              : location.pathname === "/"
               ? "bg-white text-gray-600 md:w-[900px] md:rounded-[50px] mt-[-55px]"
               : "bg-white text-gray-600 w-full fixed top-0 left-0"
           }`}
