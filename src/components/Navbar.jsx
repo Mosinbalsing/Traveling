@@ -88,7 +88,7 @@ const Navbar = () => {
           <ul className="hidden md:flex gap-12 h-full w-auto items-center font-bold text-gray-600 justify-around">
             {[
               { name: "Home", path: "/" },
-              { name: "About Us", path: "/about" },
+              { name: "Booking", path: "/booking" },
               { name: "Services", path: "/services" },
               { name: "Cars", path: "/cars" },
               { name: "Contact", path: "/contact" },
@@ -125,7 +125,7 @@ const Navbar = () => {
         <ul className="flex flex-col gap-6 p-6 font-bold text-gray-600">
           {[
             { name: "Home", path: "/" },
-            { name: "About Us", path: "/about" },
+            { name: "Booking", path: "/booking" },
             { name: "Services", path: "/services" },
             { name: "Cars", path: "/cars" },
             { name: "Contact", path: "/contact" },

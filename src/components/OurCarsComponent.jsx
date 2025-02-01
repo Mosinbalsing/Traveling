@@ -3,7 +3,7 @@ import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious
 
 const OurCarsComponent = () => {
   return (
-    <section className="cars-section relative py-20 bg-gray-100 ">
+    <section className="cars-section relative py-20 bg-gray-100 overflow-hidden ">
       <div className="auto-container max-w-[900px] mx-auto px-4">
         <div className="content-container">
           <div className="row clearfix flex flex-wrap items-center">
