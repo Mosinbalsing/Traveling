@@ -1,4 +1,4 @@
-import React from "react";
+
 
 const ServiceComponents = () => {
   const services = [
@@ -48,7 +48,7 @@ const ServiceComponents = () => {
           <h2 className="text-4xl font-bold mb-4">
             PROVIDING AMAZING SERVICES <br /> TO OUR CLIENTS
           </h2>
-          <h4 className="text-xl text-gray-500 rotate-[-90deg] absolute top-1/2 left-[-50px] transform -translate-y-1/2">
+          <h4 className="text-xl text-gray-500 md:rotate-[90deg] absolute top-1/2 left-[-50px] transform -translate-y-1/2">
             SERVICES
           </h4>
         </div>

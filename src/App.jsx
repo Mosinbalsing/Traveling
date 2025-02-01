@@ -5,8 +5,16 @@ import About from "@/pages/About";
 import Services from "@/pages/Services";
 import Cars from "@/pages/Cars";
 import Contact from "./pages/Contact ";
-
+import { useEffect } from "react";
+import AOS from 'aos';
+import 'aos/dist/aos.css';
 function App() {
+  useEffect(() => {
+    AOS.init({
+      duration: 1000, // Animation duration
+      once: true, // Whether animation should happen only once
+    });
+  }, []);
   return (
     <Router>
       <Navbar />

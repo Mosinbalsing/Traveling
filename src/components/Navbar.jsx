@@ -64,7 +64,7 @@ const Navbar = () => {
           className={`h-[100px] w-full  z-10 rounded-none  bg-white shadow-lg flex justify-between md:justify-around items-center mt-[-55px] transition-all duration-500 ease-in-out ${
             isFixed
               ? "fixed top-0 left-0 w-[100%] max-w-[1600px] rounded-none mt-[0px] animate__animated animate__fadeInDown z-30"
-              : "aos-init aos-animate md:rounded-[50px] md:w-[85%]"
+              : "aos-init aos-animate md:rounded-[50px] md:w-[900px]"
           }`}
           data-aos={isFixed ? "fade-down" : ""}
         >
