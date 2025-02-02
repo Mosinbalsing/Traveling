@@ -50,23 +50,22 @@
 		{
 			"id": "pointer:pointer",
 			"typeName": "pointer",
-			"x": 425.66668701171875,
-			"y": 177.33334350585938,
-			"lastActivityTimestamp": 1738243773583,
+			"x": 688,
+			"y": 324.8000183105469,
+			"lastActivityTimestamp": 1738501369566,
 			"meta": {}
 		},
 		{
 			"followingUserId": null,
 			"opacityForNextShape": 1,
 			"stylesForNextShape": {
-				"tldraw:fill": "none",
-				"tldraw:geo": "rectangle",
+				"tldraw:font": "mono",
 				"tldraw:size": "s"
 			},
 			"brush": null,
 			"scribbles": [],
 			"cursor": {
-				"type": "default",
+				"type": "move",
 				"rotation": 0
 			},
 			"isFocusMode": false,
@@ -76,8 +75,8 @@
 			"screenBounds": {
 				"x": 0,
 				"y": 0,
-				"w": 1032,
-				"h": 605.3333740234375
+				"w": 1287.2000732421875,
+				"h": 558.4000244140625
 			},
 			"insets": [
 				false,
@@ -92,7 +91,7 @@
 			"isChatting": false,
 			"highlightedUserIds": [],
 			"isFocused": true,
-			"devicePixelRatio": 1.5,
+			"devicePixelRatio": 1.25,
 			"isCoarsePointer": false,
 			"isHoveringCanvas": true,
 			"openMenus": [],
@@ -107,7 +106,9 @@
 		{
 			"editingShapeId": null,
 			"croppingShapeId": null,
-			"selectedShapeIds": [],
+			"selectedShapeIds": [
+				"shape:RfloPH1ZaRL2n9VXVuuFT"
+			],
 			"hoveredShapeId": null,
 			"erasingShapeIds": [],
 			"hintingShapeIds": [],
@@ -124,6 +125,63 @@
 			"meta": {},
 			"id": "camera:page:page",
 			"typeName": "camera"
+		},
+		{
+			"x": 590.2000122070312,
+			"y": 309.4000053405762,
+			"rotation": 0,
+			"isLocked": false,
+			"opacity": 1,
+			"meta": {},
+			"id": "shape:YLLWnUWO33DVRTaXDF9rI",
+			"type": "text",
+			"props": {
+				"color": "black",
+				"size": "m",
+				"w": 73,
+				"text": "About",
+				"font": "mono",
+				"textAlign": "start",
+				"autoSize": true,
+				"scale": 1
+			},
+			"parentId": "page:page",
+			"index": "a1",
+			"typeName": "shape"
+		},
+		{
+			"x": 666.4000244140625,
+			"y": 327.2000427246094,
+			"rotation": 0,
+			"isLocked": false,
+			"opacity": 1,
+			"meta": {},
+			"id": "shape:RfloPH1ZaRL2n9VXVuuFT",
+			"type": "line",
+			"props": {
+				"dash": "draw",
+				"size": "s",
+				"color": "black",
+				"spline": "line",
+				"points": {
+					"a1": {
+						"id": "a1",
+						"index": "a1",
+						"x": 0,
+						"y": 0
+					},
+					"a26Jr": {
+						"id": "a26Jr",
+						"index": "a26Jr",
+						"x": 44.20001220703125,
+						"y": 0.79998779296875
+					}
+				},
+				"scale": 1
+			},
+			"parentId": "page:page",
+			"index": "a24rw",
+			"typeName": "shape"
 		}
 	]
 }

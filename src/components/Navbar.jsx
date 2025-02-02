@@ -38,7 +38,7 @@ const Navbar = () => {
   return (
     <header className="flex flex-col">
       {/* Top Bar */}
-      <div className="bg-[#222222] h-[100px] w-full flex justify-center">
+      <div className="bg-[#222222] h-[100px] w-full flex justify-center ">
         <div className="w-full md:w-[80%] h-[50px] mt-3 flex justify-between items-start px-4 md:px-0">
           <div className="flex gap-4 icons">
             <ImFacebook className="text-white text-[17px] hover:text-[#FF8201]" />

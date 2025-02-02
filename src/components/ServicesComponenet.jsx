@@ -57,11 +57,11 @@ export default function ServicesComponent() {
 
     return (
         <section className="py-10 md:py-20 relative z-10  bg-[#FAFAFA]">
-            <div className="max-w-[1100px] mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="max-w-[1050px] mx-auto px-4 sm:px-6 lg:px-8">
                 {/* Section Title */}
                 <div className="mb-10 relative">
-          <h4 className="hidden md:block text-[18px] sm:text-[20px] text-gray-300 font-bold uppercase tracking-widest absolute left-[-100px] top-1/2 -translate-y-1/2 rotate-90 origin-left">
-            SERVICES
+                <h4 className="md:flex text-[18px] sm:text-[20px] text-[#F1F1F1] font-bold uppercase tracking-widest md:absolute md:left-[-300px] md:rotate-[90deg] md:transform md:origin-right md:mt-44 text-left justify-center gap-2 items-center rotate-0">
+            Services <span className="sm:block hidden w-[50px] h-[1px] bg-orange-500"></span>
           </h4>
           <h2 className="text-[22px] sm:text-[24px] md:text-[28px] font-sans font-bold text-gray-800 mb-6 text-justify md:text-left">
             PROVIDING AMAZING SERVICES <br className="hidden md:block" /> TO OUR CLIENTS
@@ -79,7 +79,7 @@ export default function ServicesComponent() {
                             </div>
 
                             {/* Number */}
-                            <div className="absolute top-4 right-4 bg-orange-500 text-white w-8 h-8 flex items-center justify-center rounded-full font-semibold">
+                            <div className="absolute top-[30px] right-[110px] bg-orange-500 text-white w-8 h-8 flex items-center justify-center rounded-full font-semibold">
                                 {service.number}
                             </div>
 
