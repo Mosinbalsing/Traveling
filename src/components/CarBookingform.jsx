@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom"; // Import useNavigate
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -7,6 +8,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/u
 import { FaMapMarkerAlt } from "react-icons/fa";
 
 export default function CarBookingForm() {
+  const navigate = useNavigate(); // Initialize useNavigate
+
   const [bookingDetails, setBookingDetails] = useState({
     departureDate: "",
     pickUpLocation: "",
@@ -21,12 +24,18 @@ export default function CarBookingForm() {
         async (position) => {
           const { latitude, longitude } = position.coords;
           try {
-            const response = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json`);
+            const response = await fetch(
+              `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json`
+            );
             const data = await response.json();
-            const address = data.address || {};
-            let locationText = `${address.village || address.town || address.city || "Unknown"}, ${address.county || ""}, ${address.state || ""}`;
+            const address = data.address;
+            let locationText = `${address.village || address.town || address.city}, ${address.county}, ${address.state}`;
             locationText = locationText.replace("undefined, ", "").replace(", undefined", "");
-            setBookingDetails((prev) => ({ ...prev, pickUpLocation: locationText }));
+
+            setBookingDetails((prev) => ({
+              ...prev,
+              pickUpLocation: locationText,
+            }));
           } catch (error) {
             console.error("Error fetching address:", error);
           }
@@ -39,6 +48,7 @@ export default function CarBookingForm() {
 
   const handleBookNow = (e) => {
     e.preventDefault();
+
     const { departureDate, pickUpLocation, dropOffLocation, peopleCount, travelType } = bookingDetails;
     let missingFields = [];
     if (!departureDate) missingFields.push("Departure Date");
@@ -51,10 +61,12 @@ export default function CarBookingForm() {
       return;
     }
 
-    window.location.href = `/book?departureDate=${departureDate}&pickUpLocation=${pickUpLocation}&dropOffLocation=${dropOffLocation}&peopleCount=${parseInt(peopleCount, 10)}&travelType=${travelType}`;
+    navigate(
+      `/book?departureDate=${departureDate}&pickUpLocation=${pickUpLocation}&dropOffLocation=${dropOffLocation}&peopleCount=${peopleCount}&travelType=${travelType}`
+    );
   };
 
-  const cities = ["PUNE", "SHIRDI", "MAHABLESHWAR", "Lonavala", "Mumbai", "Nashik", "Kolhapur", "Ahmadnagar", "Sambhaji Nagar"];
+  const cities = ["PUNE", "SHIRDI", "MAHABLESHWAR", "Lonavala", "Mumbai", "Nashik", "Kolhapur", "Ahmadnagar", "Sambhajinagar"];
   const travelTypes = ["One Way", "Return"];
 
   return (
@@ -67,9 +79,8 @@ export default function CarBookingForm() {
               <Input
                 type="date"
                 className="w-full border-gray-300 focus:ring-2 focus:ring-orange-400"
-                value={bookingDetails.departureDate}
-                onChange={(e) => setBookingDetails({ ...bookingDetails, departureDate: e.target.value })}
                 required
+                onChange={(e) => setBookingDetails({ ...bookingDetails, departureDate: e.target.value })}
               />
             </div>
 
@@ -90,11 +101,17 @@ export default function CarBookingForm() {
             <div className="space-y-2">
               <Label className="text-sm font-semibold text-gray-600">DROP OFF LOCATION</Label>
               <Select onValueChange={(value) => setBookingDetails({ ...bookingDetails, dropOffLocation: value })}>
-                <SelectTrigger>{bookingDetails.dropOffLocation || "Select a city"}</SelectTrigger>
+                <SelectTrigger>
+                  <div>{bookingDetails.dropOffLocation || "Select a city"}</div>
+                </SelectTrigger>
                 <SelectContent className="bg-white">
-                  {cities.filter(city => city !== bookingDetails.pickUpLocation).map((city, index) => (
-                    <SelectItem key={index} value={city}>{city}</SelectItem>
-                  ))}
+                  {cities
+                    .filter((city) => city !== bookingDetails.pickUpLocation)
+                    .map((city, index) => (
+                      <SelectItem key={index} value={city}>
+                        {city}
+                      </SelectItem>
+                    ))}
                 </SelectContent>
               </Select>
             </div>
@@ -102,10 +119,14 @@ export default function CarBookingForm() {
             <div className="space-y-2">
               <Label className="text-sm font-semibold text-gray-600">TRAVEL TYPE</Label>
               <Select onValueChange={(value) => setBookingDetails({ ...bookingDetails, travelType: value })}>
-                <SelectTrigger>{bookingDetails.travelType || "Select Travel Type"}</SelectTrigger>
+                <SelectTrigger>
+                  <div>{bookingDetails.travelType || "Select Travel Type"}</div>
+                </SelectTrigger>
                 <SelectContent>
                   {travelTypes.map((type, index) => (
-                    <SelectItem key={index} value={type}>{type}</SelectItem>
+                    <SelectItem key={index} value={type}>
+                      {type}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -118,14 +139,16 @@ export default function CarBookingForm() {
                 min="1"
                 placeholder="Enter number of people"
                 className="w-full border-gray-300 focus:ring-2 focus:ring-orange-400"
-                value={bookingDetails.peopleCount}
-                onChange={(e) => setBookingDetails({ ...bookingDetails, peopleCount: e.target.value })}
                 required
+                onChange={(e) => setBookingDetails({ ...bookingDetails, peopleCount: e.target.value })}
               />
             </div>
 
             <div className="flex items-end">
-              <Button type="submit" className="relative px-[43px] py-[14px] flex items-center leading-[24px] uppercase text-white border-2 border-[#ff8201] text-[14px] font-extrabold rounded-full bg-[#ff8201] hover:bg-transparent hover:text-[#ff8201] w-[160px] h-[50px]">
+              <Button
+                type="submit"
+                className="relative px-[43px] py-[14px] flex items-center leading-[24px] uppercase text-white border-2 border-[#ff8201] text-[14px] font-extrabold rounded-full bg-[#ff8201] hover:bg-transparent hover:text-[#ff8201] w-[160px] h-[50px]"
+              >
                 BOOK NOW
               </Button>
             </div>

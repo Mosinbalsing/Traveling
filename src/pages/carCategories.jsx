@@ -1,7 +1,7 @@
-import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
-import { MapPin, Users, Calendar } from "lucide-react"
-import { Link, useLocation } from "react-router-dom"
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { MapPin, Users, Calendar } from "lucide-react";
+import { Link, useLocation, useNavigate } from "react-router-dom"; // Import useNavigate
 
 const carCategories = [
   {
@@ -32,20 +32,20 @@ const carCategories = [
     ac: true,
     price: 4500,
   },
-]
+];
 
-export default function CarRental({ navigate }) {
-  console.log("Navigate prop:", navigate)
-  const location = useLocation()
-  const queryParams = new URLSearchParams(location.search)
+export default function CarRental() {
+  const navigate = useNavigate(); // Initialize navigate
+  const location = useLocation();
+  const queryParams = new URLSearchParams(location.search);
 
-  const departureDate = queryParams.get("departureDate")
-  const pickUpLocation = queryParams.get("pickUpLocation")
-  const dropOffLocation = queryParams.get("dropOffLocation")
-  const peopleCount = queryParams.get("peopleCount")
-  const travelType = queryParams.get("travelType")
+  const departureDate = queryParams.get("departureDate");
+  const pickUpLocation = queryParams.get("pickUpLocation");
+  const dropOffLocation = queryParams.get("dropOffLocation");
+  const peopleCount = queryParams.get("peopleCount");
+  const travelType = queryParams.get("travelType");
 
-  console.log("Query parameters:", departureDate, pickUpLocation, dropOffLocation, peopleCount, travelType)
+  console.log("Query parameters:", departureDate, pickUpLocation, dropOffLocation, peopleCount, travelType);
 
   return (
     <div className="flex flex-col lg:flex-row bg-gray-50 min-h-screen">
@@ -93,7 +93,7 @@ export default function CarRental({ navigate }) {
       {/* Main Content */}
       <div className="flex-1 p-4 lg:p-6 overflow-auto">
         <div className="flex justify-end mb-4 lg:mb-6">
-          <h2 className="text-base lg:text-lg font-semibold">Showing 4 results</h2>
+          <h2 className="text-base lg:text-lg font-semibold">Showing {carCategories.length} results</h2>
         </div>
         <div className="grid gap-4 lg:gap-6">
           {carCategories.map((car) => (
@@ -117,7 +117,16 @@ export default function CarRental({ navigate }) {
                   </div>
                   <div className="mt-4 sm:mt-0 flex items-center justify-between sm:flex-col sm:items-end gap-4">
                     <div className="text-xl lg:text-2xl font-bold">₹{car.price.toLocaleString()}</div>
-                    <Button className="bg-[#76B82A] hover:bg-[#5a8c20] text-sm lg:text-base">Book Now</Button>
+                    <Button
+                      className="bg-[#76B82A] hover:bg-[#5a8c20] text-sm lg:text-base"
+                      onClick={() =>
+                        navigate(
+                          `/book?departureDate=${departureDate}&pickUpLocation=${pickUpLocation}&dropOffLocation=${dropOffLocation}&peopleCount=${peopleCount}&travelType=${travelType}&car=${car.name}&price=${car.price}`
+                        )
+                      }
+                    >
+                      Book Now
+                    </Button>
                   </div>
                 </div>
               </CardContent>
@@ -126,6 +135,5 @@ export default function CarRental({ navigate }) {
         </div>
       </div>
     </div>
-  )
+  );
 }
-

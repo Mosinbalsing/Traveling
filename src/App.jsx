@@ -4,12 +4,12 @@ import Home from "@/pages/Home";
 import About from "@/pages/About";
 import Services from "@/pages/Services";
 import Cars from "@/pages/Cars";
-import Contact from "@/pages/Contact ";
+
 import { useEffect } from "react";
-import AOS from 'aos';
-import 'aos/dist/aos.css';
+import AOS from "aos";
+import "aos/dist/aos.css";
 import CarRental from "./pages/carCategories";
-import { useNavigate } from 'react-router-dom'; // Import useNavigate
+import Contact from "./pages/Contact ";
 
 function App() {
   useEffect(() => {
@@ -19,18 +19,13 @@ function App() {
     });
   }, []);
 
-  const navigate = useNavigate(); // Initialize navigate function
-
   return (
     <>
       <Navbar />
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/booking" element={<About />} />
-        <Route
-          path="/book"
-          element={<CarRental navigate={navigate} />} // Pass navigate prop to CarRental
-        />
+        <Route path="/book" element={<CarRental />} />
         <Route path="/services" element={<Services />} />
         <Route path="/cars" element={<Cars />} />
         <Route path="/contact" element={<Contact />} />
