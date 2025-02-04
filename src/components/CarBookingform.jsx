@@ -5,7 +5,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select";
-import { FaMapMarkerAlt } from "react-icons/fa";
+
+import { MdOutlineMyLocation } from "react-icons/md";
 
 export default function CarBookingForm() {
   const navigate = useNavigate(); // Initialize useNavigate
@@ -94,7 +95,7 @@ export default function CarBookingForm() {
                   className="w-full border-none focus:ring-0"
                   placeholder="Enter pickup location"
                 />
-                <FaMapMarkerAlt className="text-orange-400 cursor-pointer" onClick={fetchLocation} />
+                <MdOutlineMyLocation className="text-orange-400 cursor-pointer" onClick={fetchLocation} />
               </div>
             </div>
 
