@@ -7,6 +7,7 @@ import Swift from '@/assets/images/Swift.png';
 import Crysta from '@/assets/images/Crysta.png';
 import Innova from '@/assets/images/Innova.png';
 
+
 const carCategories = [
   {
     name: "Mini",
