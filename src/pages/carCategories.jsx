@@ -87,6 +87,14 @@ export default function CarRental() {
               <span className="text-sm lg:text-base">{departureDate}</span>
             </div>
           </div>
+
+          <div className="space-y-2">
+            <h2 className="text-base lg:text-lg font-semibold">Travel Type </h2>
+            <div className="flex items-center gap-2 text-red-600">
+              <MapPin className="h-4 w-4 lg:h-5 lg:w-5" />
+              <span className="text-sm lg:text-base">{travelType}</span>
+            </div>
+          </div>
         </div>
       </div>
 
