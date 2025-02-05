@@ -2,10 +2,10 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { MapPin, Users, Calendar } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import Wagnor from '../assets/images/Wagnor.png';
-import Swift from '../assets/images/Swift.png';
-import Crysta from '../assets/images/Crysta.png';
-import Innova from '../assets/images/Innova.png';
+import Wagnor from '../../public/images/Cars/Innova.png';
+import Swift from '../../public/images/Cars/Innova.png';
+import Crysta from '../../public/images/Cars/Innova.png';
+import Innova from '../../public/images/Cars/Innova.png';
 
 
 const carCategories = [
