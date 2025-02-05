@@ -7,7 +7,7 @@ function PageHeader({ title, breadcrumbs }) {
     <div className="relative h-[300px] w-full overflow-hidden mt-[-46px]">
       {/* Background Image */}
       <img
-        src="/images/bg/3.jpg"
+        src="assets/images/bg/3.jpg"
         alt="Services background"
         className="absolute inset-0 h-full w-full object-cover brightness-75"
       />

@@ -1,5 +1,5 @@
 import PageHeader from "@/components/CommonHeader"
-
+import CarServices from "@/components/CarServices"
 
 const Services = () => {
   return (
@@ -13,6 +13,7 @@ const Services = () => {
 />
 
       <h1>Services</h1>
+      <CarServices/>
     </div>
   )
 }

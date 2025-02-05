@@ -32,7 +32,7 @@ const CarBookingForm = () => {
           </div>
           <div className="relative h-48 mt-[-60] ">
             <img
-              src="/images/bg/car-layer.png"
+              src="assets/images/bg/car-layer.png"
               alt="Classic car illustration"
               className="absolute bottom-0 left-0 w-full h-auto object-contain "
             />
