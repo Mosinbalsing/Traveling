@@ -2,7 +2,7 @@ import { HR } from "flowbite-react";
 import { Button } from "@/components/ui/button";
 
 export default function AboutComponent() {
-  const LogoImg = "images/bg/1.png"; // Ensure the image path is correct
+  const LogoImg = "assets/images/bg/1.png"; // Ensure the image path is correct
 
   return (
     <section className="bg-[#FFFFFF] py-10 md:py-20 overflow-hidden relative">

@@ -74,7 +74,7 @@ const Navbar = () => {
         >
           {/* Logo */}
           <div className="w-48 h-full flex items-center pl-4 md:pl-0">
-            <img src="images/logo.png" alt="Logo" className="h-12" />
+            <img src="assets/images/logo.png" alt="Logo" className="h-12" />
           </div>
 
           {/* Hamburger Menu Icon (Mobile Only) */}

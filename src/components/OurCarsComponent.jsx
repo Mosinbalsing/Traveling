@@ -53,7 +53,7 @@ const OurCarsComponent = () => {
                         <div className="car-item relative pt-12">
                           <figure className="image">
                             <img
-                              src="/images/Cars/Car.jpg"
+                              src="assets/images/Cars/Car.jpg"
                               alt="Car"
                               className="w-full rounded-lg shadow-lg"
                             />

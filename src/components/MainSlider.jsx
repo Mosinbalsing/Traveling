@@ -12,7 +12,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 const slides = [
   {
     id: 1,
-    image: "images/main-slider/image-1.jpg",
+    image: "assets/images/main-slider/image-1.jpg",
     title:
       "Best Worldwide <br /><span class='text-orange-500'>Car Hire</span> Deals",
     text: "Tremor est vivos magna. Expansis ulnis video missing <br/>carnem armis caeruleum in locis.",
@@ -21,7 +21,7 @@ const slides = [
   },
   {
     id: 2,
-    image: "images/main-slider/image-2.jpg",
+    image: "assets/images/main-slider/image-2.jpg",
     title: "NEED A <span class='text-orange-500'>RIDE</span>?",
     text: "Tremor est vivos magna. Expansis ulnis video missing <br/>carnem armis caeruleum in locis.",
     button: "MAKE A BOOKING",
@@ -29,7 +29,7 @@ const slides = [
   },
   {
     id: 3,
-    image: "images/main-slider/image-3.jpg",
+    image: "assets/images/main-slider/image-3.jpg",
     title: "HIRE <span class='text-orange-500'>CAR</span> PROFESSIONAL",
     text: "Pestilentia est haec ambulabat mortuos. Sicut malus voodoo. Aenean a dolor <br/>vulnerum aperire accedunt, mortui iam vivam.",
     button: "CONTACT NOW",
