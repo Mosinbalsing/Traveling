@@ -2,37 +2,37 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { MapPin, Users, Calendar } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-// import Wagnor from '@/assets/images/Wagnor.png';
-// import Swift from '@/assets/images/Swift.png';
-// import Crysta from '@/assets/images/Crysta.png';
-// import Innova from '@/assets/images/Innova.png';
+import Wagnor from '../assets/images/Wagnor.png';
+import Swift from '../assets/images/Swift.png';
+import Crysta from '../assets/images/Crysta.png';
+import Innova from '../assets/images/Innova.png';
 
 
 const carCategories = [
   {
     name: "Mini",
-    image: "/images/Crysta.png",
+    image: Wagnor,
     seating: "4 + 1 Seater",
     ac: true,
     price: 2500,
   },
   {
     name: "Prime Sedan",
-    image: "/images/Crysta.png",
+    image: Swift,
     seating: "4 + 1 Seater",
     ac: true,
     price: 2500,
   },
   {
     name: "Prime SUV",
-    image: "/images/Crysta.png",
+    image: Innova,
     seating: "6 + 1 Seater",
     ac: true,
     price: 3500,
   },
   {
     name: "Prime SUV+",
-    image: "/images/Crysta.png",
+    image: Crysta,
     seating: "6 + 1 Seater",
     ac: true,
     price: 4500,
