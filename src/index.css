@@ -20,3 +20,7 @@
     backdrop-filter: blur(0px);
     -webkit-backdrop-filter: blur(0px);
 }
+.city-item:hover{
+    background-color: #007FFF;
+    color: white;
+}

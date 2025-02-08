@@ -8,6 +8,8 @@ import Crysta from "assets/images/Cars/crysta.png";
 import Innova from 'assets/images/Cars/Innova.png';
 
 
+
+
 const carCategories = [
   {
     name: "Mini",

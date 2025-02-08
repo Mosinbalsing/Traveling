@@ -1,5 +1,6 @@
 import { HR } from "flowbite-react";
 import { Button } from "@/components/ui/button";
+import PasswordInput from "./Ps";
 
 export default function AboutComponent() {
   const LogoImg = "assets/images/bg/1.png"; // Ensure the image path is correct
@@ -46,6 +47,7 @@ export default function AboutComponent() {
           <Button className="w-[160px] h-[50px] relative px-[43px] py-[14px] flex items-center leading-[24px] uppercase text-[#ff8201] border-2 border-[#ff8201] text-[14px] font-extrabold rounded-full bg-transparent hover:bg-[#ff8201] hover:text-white mt-6">
             Book Now
           </Button>
+          
         </div>
       </div>
     </section>

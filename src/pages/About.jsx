@@ -1,5 +1,6 @@
 import CarBookingForm from "@/components/Booking"
 import PageHeader from "@/components/CommonHeader"
+import SlidingAuthForm from "@/components/LogInSigUp"
 
 
 const About = () => {
@@ -12,6 +13,7 @@ const About = () => {
     { path: "/booking", label: "BOOKING" }
   ]}
 />
+      <SlidingAuthForm/>
       < CarBookingForm/>
       <h1>About</h1>
     </div>
