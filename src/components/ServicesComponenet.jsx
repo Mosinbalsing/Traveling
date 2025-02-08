@@ -91,7 +91,7 @@ export default function ServicesComponent() {
                             </h3>
 -
                             {/* Description */}
-                            <p className="text-gray-600 text-sm leading-relaxed font-sans text-[16px]">{service.description}</p>
+                            <p className="text-gray-600 text-sm leading-relaxed font-sans text-justify text-[16px]">{service.description}</p>
                         </div>
                     ))}
                 </div>

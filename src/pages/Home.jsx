@@ -4,6 +4,7 @@ import MainSlider from "@/components/MainSlider"
 import OurCarsComponent from "@/components/OurCarsComponenet"
 
 import ServicesComponent from "@/components/ServicesComponenet"
+import StackedCards from "@/components/StackedCards"
 
 
 const Home = () => {
@@ -12,6 +13,7 @@ const Home = () => {
         <MainSlider/>
         <CarBookingform/>
         <AboutComponent/>
+        <StackedCards/>
         <ServicesComponent/>
         <OurCarsComponent/>
       <h1>Home</h1>
