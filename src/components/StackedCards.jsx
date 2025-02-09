@@ -74,7 +74,7 @@ const StackedCards = () => {
   }, []);
 
   return (
-    <div className="w-full min-h-[400vh] flex flex-col lg:flex-row bg-white relative stack-area">
+    <div className="w-full max-w-[700px] min-h-[400vh] flex flex-col lg:flex-row bg-white relative stack-area">
       {/* Left Section */}
       <div className="sticky top-0 left-0 h-screen w-full lg:w-1/2 flex flex-col items-center justify-center p-8">
         <h1 className="text-4xl lg:text-6xl font-bold leading-tight text-center lg:text-left">

@@ -1,17 +1,21 @@
 import { BrowserRouter as Router, Routes, Route, useLocation } from "react-router-dom";
-import { useState, useEffect } from "react";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import { useState, useEffect, lazy, Suspense } from "react";
 import AOS from "aos";
 import "aos/dist/aos.css";
 import { FaArrowUp } from "react-icons/fa";
 import Navbar from "@/components/Navbar";
-import Home from "@/pages/Home";
-import About from "@/pages/About";
-import Services from "@/pages/Services";
-import Cars from "@/pages/Cars";
-import CarRental from "./pages/carCategories";
-import Contact from "@/pages/Contact ";
 import loder from "./assets/loaders/preloader.gif";
-import SlidingAuthForm from "./components/LogInSigUp";
+
+// Lazy load pages
+const Home = lazy(() => import("@/pages/Home"));
+const About = lazy(() => import("@/pages/About"));
+const Services = lazy(() => import("@/pages/Services"));
+const Cars = lazy(() => import("@/pages/Cars"));
+const CarRental = lazy(() => import("./pages/carCategories"));
+const Contact = lazy(() => import("@/pages/Contact "));
+const SlidingAuthForm = lazy(() => import("./components/LogInSigUp"));
 
 function ScrollToTop() {
   const { pathname } = useLocation();
@@ -32,11 +36,7 @@ function App() {
     AOS.init({ duration: 1000, once: true });
 
     const handleScroll = () => {
-      if (window.scrollY > 300) {
-        setShowButton(true);
-      } else {
-        setShowButton(false);
-      }
+      setShowButton(window.scrollY > 300);
     };
 
     window.addEventListener("scroll", handleScroll);
@@ -54,10 +54,12 @@ function App() {
 
   return (
     <>
-      
-
-      {location.pathname !== "/log" && <><Navbar /> <ScrollToTop /></>}
-      
+      {location.pathname !== "/log" && (
+        <>
+          <Navbar /> 
+          <ScrollToTop />
+        </>
+      )}
 
       {loading && (
         <div className="fixed inset-0 flex items-center justify-center bg-white z-50">
@@ -65,15 +67,31 @@ function App() {
         </div>
       )}
 
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/booking" element={<About />} />
-        <Route path="/book" element={<CarRental />} />
-        <Route path="/services" element={<Services />} />
-        <Route path="/cars" element={<Cars />} />
-        <Route path="/contact" element={<Contact />} />
-        <Route path="/log" element={<SlidingAuthForm />} />
-      </Routes>
+      <Suspense fallback={<div className="fixed inset-0 flex items-center justify-center bg-white z-50"><img src={loder} alt="Loading..." /></div>}>
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/booking" element={<About />} />
+          <Route path="/book" element={<CarRental />} />
+          <Route path="/services" element={<Services />} />
+          <Route path="/cars" element={<Cars />} />
+          <Route path="/contact" element={<Contact />} />
+          <Route path="/log" element={<SlidingAuthForm />} />
+
+        </Routes>
+      </Suspense>
+
+      <ToastContainer 
+        position="top-right"
+        autoClose={1000}
+        hideProgressBar={true}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="light"
+      />
 
       {/* Back to Top Button */}
       {showButton && (

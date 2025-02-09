@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+
 import { Label } from "@/components/ui/label";
 import {
   Card,
@@ -12,33 +12,36 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import bg from "../assets/images/Cars/carbg.png";
-import PasswordInput from "./Ps";
-import { Check, Eye, EyeOff, X } from 'lucide-react';
+import { Check, Eye, EyeOff, X } from "lucide-react";
+import axios from "axios";
+import { toast } from "react-toastify";
+import { useNavigate } from "react-router-dom";
 const PASSWORD_REQUIREMENTS = [
-  { regex: /.{8,}/, text: 'At least 8 characters' },
-  { regex: /[0-9]/, text: 'At least 1 number' },
-  { regex: /[a-z]/, text: 'At least 1 lowercase letter' },
-  { regex: /[A-Z]/, text: 'At least 1 uppercase letter' },
-  { regex: /[!-/:-@[-`{-~]/, text: 'At least 1 special characters' },
+  { regex: /.{8,}/, text: "At least 8 characters" },
+  { regex: /[0-9]/, text: "At least 1 number" },
+  { regex: /[a-z]/, text: "At least 1 lowercase letter" },
+  { regex: /[A-Z]/, text: "At least 1 uppercase letter" },
+  { regex: /[!-/:-@[-`{-~]/, text: "At least 1 special characters" },
 ];
 const STRENGTH_CONFIG = {
   colors: {
-    0: 'bg-border',
-    1: 'bg-red-500',
-    2: 'bg-orange-500',
-    3: 'bg-amber-500',
-    4: 'bg-amber-700',
-    5: 'bg-emerald-500',
+    0: "bg-border",
+    1: "bg-red-500",
+    2: "bg-orange-500",
+    3: "bg-amber-500",
+    4: "bg-amber-700",
+    5: "bg-emerald-500",
   },
   texts: {
-    0: 'Enter a password',
-    1: 'Weak password',
-    2: 'Medium password!',
-    3: 'Strong password!!',
-    4: 'Very Strong password!!!',
+    0: "Enter a password",
+    1: "Weak password",
+    2: "Medium password!",
+    3: "Strong password!!",
+    4: "Very Strong password!!!",
   },
 };
 export default function SlidingAuthForm() {
+  const navigate = useNavigate();
   const [isLogin, setIsLogin] = useState(true);
   const [loading, setLoading] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
@@ -62,7 +65,16 @@ export default function SlidingAuthForm() {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  const toggleForm = () => setIsLogin(!isLogin);
+  const toggleForm = () => {
+    setIsLogin(!isLogin);
+    setFormValues({
+      username: "",
+      name: "",
+      email: "",
+      mobile: "",
+      password: "",
+    });
+  };
 
   const validate = () => {
     let newErrors = {};
@@ -112,18 +124,89 @@ export default function SlidingAuthForm() {
     }
   };
 
-  const [password, setPassword] = useState("");
   const [isVisible, setIsVisible] = useState(false);
   const calculateStrength = useMemo(() => {
     const requirements = PASSWORD_REQUIREMENTS.map((req) => ({
-      met: req.regex.test(password),
+      met: req.regex.test(formValues.password),
       text: req.text,
     }));
     return {
       score: requirements.filter((req) => req.met).length,
       requirements,
     };
-  }, [password]);
+  }, [formValues.password]);
+
+
+
+  //login api
+  const handleLogin = async(e) => {
+    e.preventDefault();
+    console.log(formValues.email, formValues.password);
+    try {
+      const response = await axios.post('http://localhost:3000/api/auth/login', {
+        email: formValues.email,
+        password:formValues.password,
+      });
+      if (response.data.success) {
+        toast.success(response.data.message || "User Created Successfully");
+        navigate("/");
+        setFormValues({
+          username: "",
+          name: "",
+          email: "",
+          mobile: "",
+          password: "",
+        });
+      } else {
+        toast.error(response?.data?.message || "Something went wrong");
+      }
+    } catch (error) {
+      console.error("Login Error:", error);
+      toast.error(
+        error.response?.data?.error || "Login failed. Please try again."
+      );
+     
+    }
+      
+  };
+
+
+  //sigup api
+  const handleSignup = async (e) => {
+    e.preventDefault();
+
+    try {
+      const response = await axios.post(
+        "http://localhost:3000/api/auth/signup",
+        formValues
+      );
+      console.log("RESPONSE", response);
+
+      if (response.data.success) {
+        toast.success(response.data.message || "User Created Successfully");
+        toggleForm();
+        setFormValues({
+          username: "",
+          name: "",
+          email: "",
+          mobile: "",
+          password: "",
+        });
+      } else {
+        toast.error(response.data.message || "Something went wrong");
+      }
+    } catch (error) {
+      console.error("Signup Error:", error);
+      toast.error(
+        error.response?.data?.error || "Signup failed. Please try again."
+      );
+      if (error.response?.data?.error?.message) {
+        toast.error(
+          "Username or Email or phone already exists. Please choose a different username."
+        );
+      }
+    }
+  };
 
   return (
     <div className="sm:w-full flex justify-center sm:h-[1120px]">
@@ -132,9 +215,9 @@ export default function SlidingAuthForm() {
         {!isMobile && (
           <motion.div
             className={`absolute w-full md:w-1/2 h-full bg-orange-500 sm:flex hidden items-center justify-center 
-              ${
-                isLogin ? "sm:rounded-r-[50%]" : "sm:rounded-l-[50%]"
-              } hidden md:flex`}
+                ${
+                  isLogin ? "sm:rounded-r-[50%]" : "sm:rounded-l-[50%]"
+                } hidden md:flex`}
             initial={{ x: 0 }}
             animate={{ x: isLogin ? 0 : "100%" }}
             transition={{ duration: 0.6, ease: "easeInOut" }}
@@ -208,6 +291,7 @@ export default function SlidingAuthForm() {
                         <Label htmlFor="username">Username</Label>
                         <input
                           className="w-full p-2 border-2 rounded-md bg-background outline-none focus-within:border-blue-700 transition"
+                          value={formValues.username}
                           id="username"
                           name="username"
                           type="text"
@@ -225,6 +309,7 @@ export default function SlidingAuthForm() {
                         <Label htmlFor="name">Name</Label>
                         <input
                           className="w-full p-2 border-2 rounded-md bg-background outline-none focus-within:border-blue-700 transition"
+                          value={formValues.name}
                           id="name"
                           name="name"
                           type="text"
@@ -243,6 +328,7 @@ export default function SlidingAuthForm() {
                     <Label htmlFor="email">Email</Label>
                     <input
                       className="w-full p-2 border-2 rounded-md bg-background outline-none focus-within:border-blue-700 transition"
+                      value={formValues.email}
                       id="email"
                       name="email"
                       type="email"
@@ -260,6 +346,7 @@ export default function SlidingAuthForm() {
                       <Label htmlFor="mobile">Mobile</Label>
                       <input
                         className="w-full p-2 border-2 rounded-md bg-background outline-none focus-within:border-blue-700 transition"
+                        value={formValues.mobile}
                         id="mobile"
                         name="mobile"
                         type="text"
@@ -275,36 +362,30 @@ export default function SlidingAuthForm() {
                   )}
 
                   <div className="w-full sm:w-80 max-w-md mx-auto">
-                    <form className="space-y-2">
-                      <label
-                        htmlFor="password"
-                        className="block text-sm font-medium"
+                    <Label htmlFor="password">Password</Label>
+                    <div className="relative">
+                      <input
+                        id="password"
+                        name="password"
+                        type={isVisible ? "text" : "password"}
+                        value={formValues.password}
+                        onChange={handleChange}
+                        placeholder="Password"
+                        aria-invalid={calculateStrength.score < 4}
+                        aria-describedby="password-strength"
+                        className="w-full p-2 border-2 rounded-md bg-background outline-none focus-within:border-blue-700 transition"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setIsVisible((prev) => !prev)}
+                        aria-label={
+                          isVisible ? "Hide password" : "Show password"
+                        }
+                        className="absolute inset-y-0 right-0 outline-none flex items-center justify-center w-9 text-muted-foreground/80 hover:text-foreground"
                       >
-                        Password
-                      </label>
-                      <div className="relative">
-                        <input
-                          id="password"
-                          type={isVisible ? "text" : "password"}
-                          value={password}
-                          onChange={(e) => setPassword(e.target.value)}
-                          placeholder="Password"
-                          aria-invalid={calculateStrength.score < 4}
-                          aria-describedby="password-strength"
-                          className="w-full p-2 border-2 rounded-md bg-background outline-none focus-within:border-blue-700 transition"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => setIsVisible((prev) => !prev)}
-                          aria-label={
-                            isVisible ? "Hide password" : "Show password"
-                          }
-                          className="absolute inset-y-0 right-0 outline-none flex items-center justify-center w-9 text-muted-foreground/80 hover:text-foreground  "
-                        >
-                          {isVisible ? <EyeOff size={16} /> : <Eye size={16} />}
-                        </button>
-                      </div>
-                    </form>
+                        {isVisible ? <EyeOff size={16} /> : <Eye size={16} />}
+                      </button>
+                    </div>
                     <div className="flex gap-2 w-full justify-between mt-2">
                       <span
                         className={`${
@@ -386,15 +467,27 @@ export default function SlidingAuthForm() {
                       ))}
                     </ul>
                   </div>
-
                   {/* Submit Button with Loader */}
-                  <Button
-                    type="submit"
-                    className="w-full py-3 mt-4 bg-[#ff8201] text-white rounded-lg hover:bg-[#e67700] transition"
-                    disabled={loading}
-                  >
-                    {loading ? "Loading..." : isLogin ? "Login" : "Sign Up"}
-                  </Button>
+
+                  {isLogin ? (
+                    <Button
+                      type="submit"
+                      className="w-full py-3 mt-4 bg-[#ff8201] text-white rounded-lg hover:bg-[#e67700] transition"
+                      disabled={loading}
+                      onClick={handleLogin}
+                    >
+                      Login
+                    </Button>
+                  ) : (
+                    <Button
+                      type="submit"
+                      className="w-full py-3 mt-4 bg-[#ff8201] text-white rounded-lg hover:bg-[#e67700] transition"
+                      disabled={loading}
+                      onClick={handleSignup}
+                    >
+                      Sign Up
+                    </Button>
+                  )}
                 </motion.form>
               </AnimatePresence>
             </CardContent>
