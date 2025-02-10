@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route, useLocation } from "react-router-dom";
+import { Routes, Route, useLocation } from "react-router-dom";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { useState, useEffect, lazy, Suspense } from "react";
@@ -16,6 +16,7 @@ const Cars = lazy(() => import("@/pages/Cars"));
 const CarRental = lazy(() => import("./pages/carCategories"));
 const Contact = lazy(() => import("@/pages/Contact "));
 const SlidingAuthForm = lazy(() => import("./components/LogInSigUp"));
+const UserProfile = lazy(() => import("@/pages/UserProfile"));
 
 function ScrollToTop() {
   const { pathname } = useLocation();
@@ -76,7 +77,7 @@ function App() {
           <Route path="/cars" element={<Cars />} />
           <Route path="/contact" element={<Contact />} />
           <Route path="/log" element={<SlidingAuthForm />} />
-
+          <Route path="/profile" element={<UserProfile />} />
         </Routes>
       </Suspense>
 

@@ -1,13 +1,20 @@
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
+import Autoplay from "embla-carousel-autoplay";
+import { useRef } from 'react';
 
 const OurCarsComponent = () => {
+  // Create a ref for the autoplay plugin
+  const plugin = useRef(
+    Autoplay({ delay: 3000, stopOnInteraction: true })
+  );
+
   return (
     <section className="cars-section relative py-20 bg-gray-100 overflow-hidden">
-      <div className="auto-container max-w-[1100px] mx-auto px-9">
+      <div className="auto-container max-w-[1100px] mx-auto px-4 sm:px-9">
         <div className="content-container">
           <div className="row flex flex-wrap items-center">
             {/* Content Column - Left Side */}
-            <div className="content-column w-full md:w-7/12 lg:w-6/12 p-6" data-aos="fade-right">
+            <div className="content-column w-full md:w-7/12 lg:w-6/12 p-2 sm:p-6" data-aos="fade-right">
               <div className="inner-box relative">
                 {/* Section Title */}
                 <div className="sec-title mb-8">
@@ -38,19 +45,24 @@ const OurCarsComponent = () => {
             </div>
 
             {/* Carousel Column - Right Side */}
-            <div className="carousel-column w-full md:w-5/12 lg:w-6/12 p-6" data-aos="fade-left">
+            <div className="carousel-column w-full md:w-5/12 lg:w-6/12 p-2 sm:p-6" data-aos="fade-left">
               <h2 className="text-gray-800 text-lg font-bold uppercase mb-4">CADILLAC ESCALADE LIMO</h2>
               <div className="single-item-carousel relative">
-                <Carousel>
+                <Carousel 
+                  plugins={[plugin.current]}
+                  onMouseEnter={plugin.current.stop}
+                  onMouseLeave={plugin.current.reset}
+                  className="w-full"
+                >
                   <CarouselContent>
-                    {[3].map((item, index) => (
+                    {[1, 2, 3, 4].map((item, index) => (
                       <CarouselItem key={index}>
-                        <div className="car-item relative pt-12">
-                          <figure className="image">
+                        <div className="car-item relative pt-4 sm:pt-12">
+                          <figure className="image w-full h-full">
                             <img
                               src="assets/images/Cars/Swift.png"
                               alt="Car"
-                              className="w-full rounded-lg shadow-lg"
+                              className="w-full h-auto object-contain max-h-[300px] sm:max-h-none"
                             />
                           </figure>
                         </div>

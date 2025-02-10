@@ -115,7 +115,7 @@ const MainSlider = () => {
                     dangerouslySetInnerHTML={{ __html: slide.text }}
                   ></p>
                   <div data-aos="zoom-in" data-aos-delay="400">
-                    <Button className=" flex items-center leading-[24px] uppercase text-white border-2 border-[#ff8201] text-[14px] font-extrabold rounded-full bg-[#ff8201] hover:bg-transparent hover:text-[#ff8201] sm:block hidden h-[50px] w-[167px]">
+                    <Button className="hidden sm:flex items-center leading-[24px] uppercase text-white border-2 border-[#ff8201] text-[14px] font-extrabold rounded-full bg-[#ff8201] hover:bg-transparent hover:text-[#ff8201] h-[50px] w-[167px]">
                       {slide.button}
                     </Button>
                   </div>
