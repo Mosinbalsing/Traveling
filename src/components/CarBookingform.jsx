@@ -11,6 +11,14 @@ import axios from "axios";
 
 import { MdOutlineMyLocation } from "react-icons/md";
 
+const getCurrentDate = () => {
+  const today = new Date();
+  const year = today.getFullYear();
+  const month = String(today.getMonth() + 1).padStart(2, '0');
+  const day = String(today.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
 export default function CarBookingForm() {
   const navigate = useNavigate(); // Initialize useNavigate
 
@@ -130,6 +138,8 @@ export default function CarBookingForm() {
                 type="date"
                 className="w-full border-gray-300 focus:ring-2 focus:ring-orange-400"
                 required
+                min={getCurrentDate()}
+                value={bookingDetails.departureDate}
                 onChange={(e) => setBookingDetails({ ...bookingDetails, departureDate: e.target.value })}
               />
             </div>
