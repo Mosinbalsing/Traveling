@@ -86,7 +86,7 @@ export default function CarBookingForm() {
     "ahmadnagar",
     "sambhaji nagar",
   ];
-  const travelTypes = ["One Way", "Return"];
+  const travelTypes = ["One Way"];
 
   return (
     <div className="w-full max-w-7xl mx-auto bg-[#FAFAFA] relative sm:top-[-200px]">

@@ -68,7 +68,7 @@ export default function CarBookingForm() {
   };
 
   const cities = ["PUNE", "SHIRDI", "MAHABLESHWAR", "Lonavala", "Mumbai", "Nashik", "Kolhapur", "Ahmadnagar", "Sambhajinagar"];
-  const travelTypes = ["One Way", "Return"];
+  const travelTypes = ["One Way"];
 
   return (
     <div className="w-full max-w-7xl mx-auto bg-[#FAFAFA] relative sm:top-[-200px]">
