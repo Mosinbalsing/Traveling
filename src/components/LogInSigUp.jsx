@@ -150,19 +150,23 @@ export default function SlidingAuthForm() {
   // Update login handler
   const handleLogin = async (e) => {
     e.preventDefault();
-    setLoading(true);
-
+    
     try {
-      // Basic validation
-      if (!formValues.email || !formValues.password) {
-        toast.error("Please fill in all fields");
+      setLoading(true);
+
+      // Validate email format
+      if (!formValues.email || !formValues.email.includes('@')) {
+        toast.error('Please enter a valid email address');
         return;
       }
 
       const response = await authAPI.login(formValues.email, formValues.password);
       
-      if (response && response.token) {
+      if (response.success) {
+        // Store both token and username
         localStorage.setItem("token", response.token);
+        localStorage.setItem("username", response.user?.name || response.user?.username || formValues.email.split('@')[0]);
+        
         toast.success("Login Successful");
         navigate("/profile");
         setFormValues({
@@ -173,38 +177,26 @@ export default function SlidingAuthForm() {
           password: "",
         });
       } else {
-        toast.error("Invalid login response");
+        toast.error(response.message || "Login failed");
       }
     } catch (error) {
-      if (error.response?.data?.message) {
-        toast.error(error.response.data.message);
-      } else if (error.message) {
-        toast.error(error.message);
-      } else {
-        toast.error("Login failed - Please try again");
-      }
+      console.error('Login Error:', error);
+      toast.error(error.message || "Unable to connect to server");
     } finally {
       setLoading(false);
     }
   };
 
-  // Update signup handler
+  // Update signup handler similarly
   const handleSignup = async (e) => {
     e.preventDefault();
-    setLoading(true);
-
+    
     try {
-      // Basic validation
-      if (!formValues.email || !formValues.password || !formValues.username || !formValues.name || !formValues.mobile) {
-        toast.error("Please fill in all fields");
-        return;
-      }
-
       const response = await authAPI.signup(formValues);
       
-      if (response && response.success) {
+      if (response.success) {
         toast.success("User Created Successfully");
-        toggleForm(); // Switch to login form
+        toggleForm();
         setFormValues({
           username: "",
           name: "",
@@ -213,18 +205,22 @@ export default function SlidingAuthForm() {
           password: "",
         });
       } else {
-        toast.error(response?.message || "Signup failed");
+        toast.error(response.message || "Signup failed");
       }
     } catch (error) {
+      console.error('Signup Error:', {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status
+      });
+
       if (error.response?.data?.message) {
         toast.error(error.response.data.message);
-      } else if (error.message) {
-        toast.error(error.message);
+      } else if (error.code === 'ERR_NETWORK') {
+        toast.error("Unable to connect to server");
       } else {
         toast.error("Signup failed - Please try again");
       }
-    } finally {
-      setLoading(false);
     }
   };
 
