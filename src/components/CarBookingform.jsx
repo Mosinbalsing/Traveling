@@ -5,6 +5,9 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select";
+import { toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import axios from "axios";
 
 import { MdOutlineMyLocation } from "react-icons/md";
 
@@ -47,10 +50,11 @@ export default function CarBookingForm() {
     }
   };
 
-  const handleBookNow = (e) => {
+  const handleBookNow = async (e) => {
     e.preventDefault();
-
-    const { departureDate, pickUpLocation, dropOffLocation, peopleCount, travelType } = bookingDetails;
+    
+    // First validate required fields
+    const { departureDate, pickUpLocation, dropOffLocation, peopleCount } = bookingDetails;
     let missingFields = [];
     if (!departureDate) missingFields.push("Departure Date");
     if (!pickUpLocation) missingFields.push("Pick Up Location");
@@ -58,13 +62,58 @@ export default function CarBookingForm() {
     if (!peopleCount) missingFields.push("Number of People");
 
     if (missingFields.length > 0) {
-      alert(`Please fill the following fields: ${missingFields.join(", ")}`);
+      toast.error(`Please fill the following fields: ${missingFields.join(", ")}`, {
+        position: "top-center",
+        autoClose: 3000
+      });
       return;
     }
 
-    navigate(
-      `/book?departureDate=${departureDate}&pickUpLocation=${pickUpLocation}&dropOffLocation=${dropOffLocation}&peopleCount=${peopleCount}&travelType=${travelType}`
-    );
+    // Check authentication
+    const token = localStorage.getItem("token");
+    if (!token) {
+      toast.error("Please login first to book a cab", {
+        position: "top-center",
+        autoClose: 3000
+      });
+      return;
+    }
+
+    // Verify token with backend using getuserdata endpoint
+    try {
+      const response = await axios.get('https://noble-liberation-production.up.railway.app/api/auth/getuserdata', {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+
+      if (response.data.success) {
+        // Token is valid, proceed to car selection
+        navigate('/book', {
+          state: {
+            ...bookingDetails
+          }
+        });
+      } else {
+        toast.error("Session expired. Please login again");
+        localStorage.removeItem("token");
+        setTimeout(() => {
+          navigate('/log');
+        }, 1500);
+      }
+    } catch (error) {
+      console.log('Auth Error:', error.response || error);
+      
+      if (error.response?.status === 401) {
+        toast.error("Please login again to continue");
+        localStorage.removeItem("token");
+        // setTimeout(() => {
+        //   navigate('/log');
+        // }, 1500);
+      } else {
+        toast.error("Unable to verify login. Please try again.");
+      }
+    }
   };
 
   const cities = ["PUNE", "SHIRDI", "MAHABLESHWAR", "Lonavala", "Mumbai", "Nashik", "Kolhapur", "Ahmadnagar", "Sambhajinagar"];
