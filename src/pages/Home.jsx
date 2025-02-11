@@ -1,5 +1,5 @@
 import AboutComponent from "@/components/AboutComponent"
-import CarBookingform from "@/components/CarBookingform2"
+import CarBookingform from "@/components/CarBookingform"
 import MainSlider from "@/components/MainSlider"
 import OurCarsComponent from "@/components/OurCarsComponenet"
 import ServicesComponent from "@/components/ServicesComponenet"
