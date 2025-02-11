@@ -150,11 +150,18 @@ export default function SlidingAuthForm() {
   // Update login handler
   const handleLogin = async (e) => {
     e.preventDefault();
-    
+    setLoading(true);
+
     try {
+      // Basic validation
+      if (!formValues.email || !formValues.password) {
+        toast.error("Please fill in all fields");
+        return;
+      }
+
       const response = await authAPI.login(formValues.email, formValues.password);
       
-      if (response.success) {
+      if (response && response.token) {
         localStorage.setItem("token", response.token);
         toast.success("Login Successful");
         navigate("/profile");
@@ -166,35 +173,38 @@ export default function SlidingAuthForm() {
           password: "",
         });
       } else {
-        toast.error(response.message || "Login failed");
+        toast.error("Invalid login response");
       }
     } catch (error) {
-      console.error('Login Error:', {
-        message: error.message,
-        response: error.response?.data,
-        status: error.response?.status
-      });
-
       if (error.response?.data?.message) {
         toast.error(error.response.data.message);
-      } else if (error.code === 'ERR_NETWORK') {
-        toast.error("Unable to connect to server");
+      } else if (error.message) {
+        toast.error(error.message);
       } else {
         toast.error("Login failed - Please try again");
       }
+    } finally {
+      setLoading(false);
     }
   };
 
-  // Update signup handler similarly
+  // Update signup handler
   const handleSignup = async (e) => {
     e.preventDefault();
-    
+    setLoading(true);
+
     try {
+      // Basic validation
+      if (!formValues.email || !formValues.password || !formValues.username || !formValues.name || !formValues.mobile) {
+        toast.error("Please fill in all fields");
+        return;
+      }
+
       const response = await authAPI.signup(formValues);
       
-      if (response.success) {
+      if (response && response.success) {
         toast.success("User Created Successfully");
-        toggleForm();
+        toggleForm(); // Switch to login form
         setFormValues({
           username: "",
           name: "",
@@ -203,22 +213,18 @@ export default function SlidingAuthForm() {
           password: "",
         });
       } else {
-        toast.error(response.message || "Signup failed");
+        toast.error(response?.message || "Signup failed");
       }
     } catch (error) {
-      console.error('Signup Error:', {
-        message: error.message,
-        response: error.response?.data,
-        status: error.response?.status
-      });
-
       if (error.response?.data?.message) {
         toast.error(error.response.data.message);
-      } else if (error.code === 'ERR_NETWORK') {
-        toast.error("Unable to connect to server");
+      } else if (error.message) {
+        toast.error(error.message);
       } else {
         toast.error("Signup failed - Please try again");
       }
+    } finally {
+      setLoading(false);
     }
   };
 
