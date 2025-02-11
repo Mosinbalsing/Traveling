@@ -16,7 +16,7 @@ import { Check, Eye, EyeOff, X } from "lucide-react";
 import axios from "axios";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
-import { API_ENDPOINTS } from '@/config/api';
+import { authAPI } from '@/config/api';
 
 const PASSWORD_REQUIREMENTS = [
   { regex: /.{8,}/, text: "At least 8 characters" },
@@ -148,17 +148,15 @@ export default function SlidingAuthForm() {
   }, [formValues.password]);
 
   // Update login handler
-  const handleLogin = async(e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
+    
     try {
-      const response = await api.post(API_ENDPOINTS.LOGIN, {
-        email: formValues.email,
-        password: formValues.password,
-      });
-      const token = response.data.token;
-      if (response.data.success) {
-        localStorage.setItem("token", token);
-        toast.success(response.data.message || "Login Successful");
+      const response = await authAPI.login(formValues.email, formValues.password);
+      
+      if (response.success) {
+        localStorage.setItem("token", response.token);
+        toast.success("Login Successful");
         navigate("/profile");
         setFormValues({
           username: "",
@@ -167,13 +165,22 @@ export default function SlidingAuthForm() {
           mobile: "",
           password: "",
         });
+      } else {
+        toast.error(response.message || "Login failed");
       }
     } catch (error) {
-      console.error("Login Error:", error);
-      if (error.code === 'ERR_NETWORK') {
-        toast.error("Unable to connect to server. Please check your internet connection.");
+      console.error('Login Error:', {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status
+      });
+
+      if (error.response?.data?.message) {
+        toast.error(error.response.data.message);
+      } else if (error.code === 'ERR_NETWORK') {
+        toast.error("Unable to connect to server");
       } else {
-        toast.error(error.response?.data?.error || "Login failed. Please try again.");
+        toast.error("Login failed - Please try again");
       }
     }
   };
@@ -181,10 +188,12 @@ export default function SlidingAuthForm() {
   // Update signup handler similarly
   const handleSignup = async (e) => {
     e.preventDefault();
+    
     try {
-      const response = await api.post(API_ENDPOINTS.SIGNUP, formValues);
-      if (response.data.success) {
-        toast.success(response.data.message || "User Created Successfully");
+      const response = await authAPI.signup(formValues);
+      
+      if (response.success) {
+        toast.success("User Created Successfully");
         toggleForm();
         setFormValues({
           username: "",
@@ -193,15 +202,22 @@ export default function SlidingAuthForm() {
           mobile: "",
           password: "",
         });
+      } else {
+        toast.error(response.message || "Signup failed");
       }
     } catch (error) {
-      console.error("Signup Error:", error);
-      if (error.code === 'ERR_NETWORK') {
-        toast.error("Unable to connect to server. Please check your internet connection.");
-      } else if (error.response?.data?.error?.message) {
-        toast.error("Username or Email or phone already exists. Please choose a different username.");
+      console.error('Signup Error:', {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status
+      });
+
+      if (error.response?.data?.message) {
+        toast.error(error.response.data.message);
+      } else if (error.code === 'ERR_NETWORK') {
+        toast.error("Unable to connect to server");
       } else {
-        toast.error(error.response?.data?.error || "Signup failed. Please try again.");
+        toast.error("Signup failed - Please try again");
       }
     }
   };

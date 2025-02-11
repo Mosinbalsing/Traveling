@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { api } from '@/config/api';
+import { authAPI } from '@/config/api';
 import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -26,22 +26,18 @@ const UserProfile = () => {
                 return;
             }
     
-            const response = await api.get(API_ENDPOINTS.GET_USER_DATA, {
-                headers: {
-                    Authorization: `Bearer ${token}`
-                }
-            });
+            const response = await authAPI.getUserData(token);
             
-            if (response.data.success) {
-                setUserData(response.data.user);
+            if (response.success) {
+                setUserData(response.user);
                 setError(null);
             } else {
-                setError(response.data.message || "Failed to fetch user details");
+                setError(response.message || "Failed to fetch user details");
             }
         } catch (error) {
             console.error("Error fetching user details:", error);
             if (error.code === 'ERR_NETWORK') {
-                setError("Unable to connect to server. Please check your internet connection.");
+                setError("Unable to connect to server");
             } else if (error.response?.status === 401) {
                 localStorage.removeItem('token');
                 navigate('/log');
