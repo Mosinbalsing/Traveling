@@ -223,8 +223,8 @@ export default function SlidingAuthForm() {
   };
 
   return (
-    <div className="sm:w-full flex justify-center sm:h-[1120px]">
-      <div className="relative w-full sm:w-full max-w-screen min-h-screen bg-gray-100 flex ">
+    <div className="sm:w-full flex justify-center min-h-screen">
+      <div className="relative w-full sm:w-full max-w-screen min-h-screen bg-gray-100 flex">
         {/* Sliding Illustration - Hidden on Mobile and Tablet */}
         {!isMobile && (
           <motion.div
@@ -270,14 +270,14 @@ export default function SlidingAuthForm() {
           </motion.div>
         )}
 
-        {/* Form Section - Full Width on Mobile and Tablet */}
+        {/* Form Section */}
         <motion.div
-          className="relative w-full md:w-1/2 flex items-center justify-center p-8 space-y-2"
+          className="relative w-full md:w-1/2 flex items-center justify-center p-4 md:p-8 overflow-y-auto"
           initial={{ x: 0 }}
           animate={{ x: isMobile ? 0 : isLogin ? "100%" : 0 }}
           transition={{ duration: 0.6, ease: "easeInOut" }}
         >
-          <Card className="w-full max-w-md shadow-lg rounded-lg p-6 bg-white">
+          <Card className="w-full max-w-md shadow-lg rounded-lg p-4 md:p-6 bg-white">
             <CardHeader>
               <CardTitle className="text-2xl font-bold text-center">
                 {isLogin ? "Login" : "Sign Up"}
@@ -292,16 +292,12 @@ export default function SlidingAuthForm() {
               <AnimatePresence mode="wait">
                 <motion.form
                   key={isLogin ? "login" : "signup"}
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.5 }}
                   className="space-y-4"
                   onSubmit={handleSubmit}
                 >
                   {!isLogin && (
-                    <>
-                      <div className="w-full sm:w-80 max-w-md mx-auto">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
                         <Label htmlFor="username">Username</Label>
                         <input
                           className="w-full p-2 border-2 rounded-md bg-background outline-none focus-within:border-blue-700 transition"
@@ -314,12 +310,11 @@ export default function SlidingAuthForm() {
                           disabled={loading}
                         />
                         {errors.username && (
-                          <p className="text-red-500 text-sm">
-                            {errors.username}
-                          </p>
+                          <p className="text-red-500 text-sm">{errors.username}</p>
                         )}
                       </div>
-                      <div className="w-full sm:w-80 max-w-md mx-auto">
+
+                      <div className="space-y-2">
                         <Label htmlFor="name">Name</Label>
                         <input
                           className="w-full p-2 border-2 rounded-md bg-background outline-none focus-within:border-blue-700 transition"
@@ -335,47 +330,53 @@ export default function SlidingAuthForm() {
                           <p className="text-red-500 text-sm">{errors.name}</p>
                         )}
                       </div>
-                    </>
-                  )}
-
-                  <div className="w-full sm:w-80 max-w-md mx-auto">
-                    <Label htmlFor="email">Email</Label>
-                    <input
-                      className="w-full p-2 border-2 rounded-md bg-background outline-none focus-within:border-blue-700 transition"
-                      value={formValues.email}
-                      id="email"
-                      name="email"
-                      type="email"
-                      placeholder="m@example.com"
-                      onChange={handleChange}
-                      disabled={loading}
-                    />
-                    {errors.email && (
-                      <p className="text-red-500 text-sm">{errors.email}</p>
-                    )}
-                  </div>
-
-                  {!isLogin && (
-                    <div className="w-full sm:w-80 max-w-md mx-auto">
-                      <Label htmlFor="mobile">Mobile</Label>
-                      <input
-                        className="w-full p-2 border-2 rounded-md bg-background outline-none focus-within:border-blue-700 transition"
-                        value={formValues.mobile}
-                        id="mobile"
-                        name="mobile"
-                        type="text"
-                        maxLength={10}
-                        placeholder="10-digit number"
-                        onChange={handleChange}
-                        disabled={loading}
-                      />
-                      {errors.mobile && (
-                        <p className="text-red-500 text-sm">{errors.mobile}</p>
-                      )}
                     </div>
                   )}
 
-                  <div className="w-full sm:w-80 max-w-md mx-auto">
+                  {/* Email and Mobile fields in two columns */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* Email field */}
+                    <div className="space-y-2">
+                      <Label htmlFor="email">Email</Label>
+                      <input
+                        className="w-full p-2 border-2 rounded-md bg-background outline-none focus-within:border-blue-700 transition"
+                        value={formValues.email}
+                        id="email"
+                        name="email"
+                        type="email"
+                        placeholder="m@example.com"
+                        onChange={handleChange}
+                        disabled={loading}
+                      />
+                      {errors.email && (
+                        <p className="text-red-500 text-sm">{errors.email}</p>
+                      )}
+                    </div>
+
+                    {/* Mobile field */}
+                    {!isLogin && (
+                      <div className="space-y-2">
+                        <Label htmlFor="mobile">Mobile</Label>
+                        <input
+                          className="w-full p-2 border-2 rounded-md bg-background outline-none focus-within:border-blue-700 transition"
+                          value={formValues.mobile}
+                          id="mobile"
+                          name="mobile"
+                          type="text"
+                          maxLength={10}
+                          placeholder="10-digit number"
+                          onChange={handleChange}
+                          disabled={loading}
+                        />
+                        {errors.mobile && (
+                          <p className="text-red-500 text-sm">{errors.mobile}</p>
+                        )}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Password field */}
+                  <div className="space-y-2">
                     <Label htmlFor="password">Password</Label>
                     <div className="relative">
                       <input
@@ -481,27 +482,16 @@ export default function SlidingAuthForm() {
                       ))}
                     </ul>
                   </div>
-                  {/* Submit Button with Loader */}
 
-                  {isLogin ? (
-                    <Button
-                      type="submit"
-                      className="w-full py-3 mt-4 bg-[#ff8201] text-white rounded-lg hover:bg-[#e67700] transition"
-                      disabled={loading}
-                      onClick={handleLogin}
-                    >
-                      Login
-                    </Button>
-                  ) : (
-                    <Button
-                      type="submit"
-                      className="w-full py-3 mt-4 bg-[#ff8201] text-white rounded-lg hover:bg-[#e67700] transition"
-                      disabled={loading}
-                      onClick={handleSignup}
-                    >
-                      Sign Up
-                    </Button>
-                  )}
+                  {/* Submit Button */}
+                  <Button
+                    type="submit"
+                    className="w-full py-3 mt-4 bg-[#ff8201] text-white rounded-lg hover:bg-[#e67700] transition"
+                    disabled={loading}
+                    onClick={isLogin ? handleLogin : handleSignup}
+                  >
+                    {isLogin ? "Login" : "Sign Up"}
+                  </Button>
                 </motion.form>
               </AnimatePresence>
             </CardContent>
