@@ -13,8 +13,6 @@ const About = () => {
     { path: "/booking", label: "BOOKING" }
   ]}
 />
-      <SlidingAuthForm/>
-      < CarBookingForm/>
       <h1>About</h1>
     </div>
   )
