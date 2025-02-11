@@ -168,7 +168,7 @@ export default function SlidingAuthForm() {
         localStorage.setItem("username", response.user?.name || response.user?.username || formValues.email.split('@')[0]);
         
         toast.success("Login Successful");
-        navigate("/profile");
+        navigate("/");
         setFormValues({
           username: "",
           name: "",
