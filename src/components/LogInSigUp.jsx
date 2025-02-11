@@ -299,9 +299,9 @@ export default function SlidingAuthForm() {
                   className="space-y-4"
                   onSubmit={handleSubmit}
                 >
-                  {!isLogin && (  
-                    <>
-                      <div className="w-full sm:w-80 max-w-md mx-auto">
+                  {!isLogin && (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
                         <Label htmlFor="username">Username</Label>
                         <input
                           className="w-full p-2 border-2 rounded-md bg-background outline-none focus-within:border-blue-700 transition"
@@ -314,12 +314,11 @@ export default function SlidingAuthForm() {
                           disabled={loading}
                         />
                         {errors.username && (
-                          <p className="text-red-500 text-sm">
-                            {errors.username}
-                          </p>
+                          <p className="text-red-500 text-sm">{errors.username}</p>
                         )}
                       </div>
-                      <div className="w-full sm:w-80 max-w-md mx-auto">
+
+                      <div className="space-y-2">
                         <Label htmlFor="name">Name</Label>
                         <input
                           className="w-full p-2 border-2 rounded-md bg-background outline-none focus-within:border-blue-700 transition"
@@ -335,43 +334,62 @@ export default function SlidingAuthForm() {
                           <p className="text-red-500 text-sm">{errors.name}</p>
                         )}
                       </div>
-                    </>
+                    </div>
                   )}
 
-                  <div className="w-full sm:w-80 max-w-md mx-auto">
-                    <Label htmlFor="email">Email</Label>
-                    <input
-                      className="w-full p-2 border-2 rounded-md bg-background outline-none focus-within:border-blue-700 transition"
-                      value={formValues.email}
-                      id="email"
-                      name="email"
-                      type="email"
-                      placeholder="m@example.com"
-                      onChange={handleChange}
-                      disabled={loading}
-                    />
-                    {errors.email && (
-                      <p className="text-red-500 text-sm">{errors.email}</p>
-                    )}
-                  </div>
-
-                  {!isLogin && (
+                  {isLogin ? (
                     <div className="w-full sm:w-80 max-w-md mx-auto">
-                      <Label htmlFor="mobile">Mobile</Label>
+                      <Label htmlFor="email">Email</Label>
                       <input
                         className="w-full p-2 border-2 rounded-md bg-background outline-none focus-within:border-blue-700 transition"
-                        value={formValues.mobile}
-                        id="mobile"
-                        name="mobile"
-                        type="text"
-                        maxLength={10}
-                        placeholder="10-digit number"
+                        value={formValues.email}
+                        id="email"
+                        name="email"
+                        type="email"
+                        placeholder="m@example.com"
                         onChange={handleChange}
                         disabled={loading}
                       />
-                      {errors.mobile && (
-                        <p className="text-red-500 text-sm">{errors.mobile}</p>
+                      {errors.email && (
+                        <p className="text-red-500 text-sm">{errors.email}</p>
                       )}
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="email">Email</Label>
+                        <input
+                          className="w-full p-2 border-2 rounded-md bg-background outline-none focus-within:border-blue-700 transition"
+                          value={formValues.email}
+                          id="email"
+                          name="email"
+                          type="email"
+                          placeholder="m@example.com"
+                          onChange={handleChange}
+                          disabled={loading}
+                        />
+                        {errors.email && (
+                          <p className="text-red-500 text-sm">{errors.email}</p>
+                        )}
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="mobile">Mobile</Label>
+                        <input
+                          className="w-full p-2 border-2 rounded-md bg-background outline-none focus-within:border-blue-700 transition"
+                          value={formValues.mobile}
+                          id="mobile"
+                          name="mobile"
+                          type="text"
+                          maxLength={10}
+                          placeholder="10-digit number"
+                          onChange={handleChange}
+                          disabled={loading}
+                        />
+                        {errors.mobile && (
+                          <p className="text-red-500 text-sm">{errors.mobile}</p>
+                        )}
+                      </div>
                     </div>
                   )}
 
