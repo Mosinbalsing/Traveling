@@ -333,9 +333,9 @@ export default function SlidingAuthForm() {
                     </div>
                   )}
 
-                  {/* Email and Mobile fields in two columns */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {/* Email field */}
+                  {/* Email and Mobile fields */}
+                  {isLogin ? (
+                    // Single column for login
                     <div className="space-y-2">
                       <Label htmlFor="email">Email</Label>
                       <input
@@ -352,9 +352,26 @@ export default function SlidingAuthForm() {
                         <p className="text-red-500 text-sm">{errors.email}</p>
                       )}
                     </div>
+                  ) : (
+                    // Two columns for signup
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="email">Email</Label>
+                        <input
+                          className="w-full p-2 border-2 rounded-md bg-background outline-none focus-within:border-blue-700 transition"
+                          value={formValues.email}
+                          id="email"
+                          name="email"
+                          type="email"
+                          placeholder="m@example.com"
+                          onChange={handleChange}
+                          disabled={loading}
+                        />
+                        {errors.email && (
+                          <p className="text-red-500 text-sm">{errors.email}</p>
+                        )}
+                      </div>
 
-                    {/* Mobile field */}
-                    {!isLogin && (
                       <div className="space-y-2">
                         <Label htmlFor="mobile">Mobile</Label>
                         <input
@@ -372,8 +389,8 @@ export default function SlidingAuthForm() {
                           <p className="text-red-500 text-sm">{errors.mobile}</p>
                         )}
                       </div>
-                    )}
-                  </div>
+                    </div>
+                  )}
 
                   {/* Password field */}
                   <div className="space-y-2">
