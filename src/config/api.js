@@ -5,41 +5,15 @@ import axios from 'axios';
 // Use the correct Railway URL
 const BASE_URL = 'https://noble-liberation-production.up.railway.app';
 
-// Create axios instance with simpler config
+// Create a simple axios instance
 const axiosInstance = axios.create({
   baseURL: BASE_URL,
   headers: {
-    'Content-Type': 'application/json'
-  }
-});
-
-// Add request interceptor for debugging
-axiosInstance.interceptors.request.use(
-  config => {
-    console.log(`🚀 Making ${config.method?.toUpperCase()} request to:`, config.url);
-    return config;
+    'Content-Type': 'application/json',
+    'Accept': 'application/json'
   },
-  error => {
-    console.error('❌ Request Error:', error);
-    return Promise.reject(error);
-  }
-);
-
-// Add response interceptor for debugging
-axiosInstance.interceptors.response.use(
-  response => response,
-  error => {
-    if (error.code === 'ERR_NETWORK') {
-      console.error('🔴 Network Error - Server might be down or URL incorrect');
-    } else {
-      console.error('🔴 Response Error:', {
-        status: error.response?.status,
-        data: error.response?.data
-      });
-    }
-    return Promise.reject(error);
-  }
-);
+  withCredentials: true
+});
 
 // API endpoints
 export const API_ENDPOINTS = {
@@ -50,18 +24,70 @@ export const API_ENDPOINTS = {
 
 // API functions
 export const authAPI = {
-  login: (email, password) => 
-    axiosInstance.post(API_ENDPOINTS.LOGIN, { email, password })
-      .then(response => response.data),
+  login: async (email, password) => {
+    try {
+      // Use direct axios call for testing
+      const response = await axios({
+        method: 'POST',
+        url: `${BASE_URL}${API_ENDPOINTS.LOGIN}`,
+        data: { email, password },
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        withCredentials: true
+      });
+      
+      if (response.data) {
+        return response.data;
+      }
+      throw new Error('No response data');
+      
+    } catch (error) {
+      if (error.code === 'ERR_NETWORK') {
+        throw new Error('Network error - Please check your connection');
+      }
+      throw error;
+    }
+  },
 
-  signup: (userData) => 
-    axiosInstance.post(API_ENDPOINTS.SIGNUP, userData)
-      .then(response => response.data),
+  signup: async (userData) => {
+    try {
+      const response = await axios({
+        method: 'POST',
+        url: `${BASE_URL}${API_ENDPOINTS.SIGNUP}`,
+        data: userData,
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        withCredentials: true
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Signup Error:', error);
+      throw error;
+    }
+  },
 
-  getUserData: (token) => 
-    axiosInstance.get(API_ENDPOINTS.GET_USER_DATA, {
-      headers: { Authorization: `Bearer ${token}` }
-    }).then(response => response.data)
+  getUserData: async (token) => {
+    try {
+      const response = await axios({
+        method: 'GET',
+        url: `${BASE_URL}${API_ENDPOINTS.GET_USER_DATA}`,
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        withCredentials: true
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Get User Data Error:', error);
+      throw error;
+    }
+  }
 };
 
 export default authAPI; 
