@@ -94,13 +94,15 @@ function App() {
         theme="light"
       />
 
-      {/* WhatsApp Button - Hidden on /log route */}
+      {/* WhatsApp Button - Position changes based on Back to Top button visibility */}
       {location.pathname !== "/log" && (
         <a
           href="https://wa.me/919730260479"
           target="_blank"
           rel="noopener noreferrer"
-          className="fixed bottom-20 right-5 bg-green-500 text-white p-3 rounded-full shadow-lg hover:bg-green-600 transition-all z-50"
+          className={`fixed right-5 bg-green-500 text-white p-3 rounded-full shadow-lg hover:bg-green-600 transition-all z-50 ${
+            showButton ? 'bottom-20' : 'bottom-5'
+          }`}
           aria-label="Chat on WhatsApp"
         >
           <FaWhatsapp size={20} />
