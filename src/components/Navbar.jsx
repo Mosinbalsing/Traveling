@@ -54,8 +54,8 @@ const Navbar = () => {
 
   return (
     <header className="flex flex-col">
-      {/* Top Bar */}
-      <div className="bg-[#222222] h-[100px] w-full flex justify-center ">
+      {/* Top Bar - Hidden on mobile */}
+      <div className="hidden md:flex bg-[#222222] h-[100px] w-full justify-center">
         <div className="w-full md:w-[80%] h-[50px] mt-3 flex justify-between items-start px-4 md:px-0">
           <div className="flex gap-4 icons">
             <ImFacebook className="text-white text-[17px] hover:text-[#FF8201]" />
@@ -84,7 +84,7 @@ const Navbar = () => {
             isFixed
               ? "fixed top-0 left-0 w-[100%] max-w-[1600px] rounded-none mt-[0px] animate__animated animate__fadeInDown z-30 bg-white"
               : location.pathname === "/"
-              ? "bg-white text-gray-600 md:w-[900px] md:rounded-[50px] mt-[-55px]"
+              ? "bg-white text-gray-600 md:w-[900px] md:rounded-[50px] md:mt-[-55px] mt-0"
               : "bg-white text-gray-600 w-full fixed top-0 left-0"
           }`}
           data-aos={isFixed ? "fade-down" : ""}

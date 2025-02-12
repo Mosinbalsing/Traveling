@@ -4,7 +4,7 @@ import "react-toastify/dist/ReactToastify.css";
 import { useState, useEffect, lazy, Suspense } from "react";
 import AOS from "aos";
 import "aos/dist/aos.css";
-import { FaArrowUp } from "react-icons/fa";
+import { FaArrowUp, FaWhatsapp } from "react-icons/fa";
 import Navbar from "@/components/Navbar";
 import loder from "./assets/loaders/preloader.gif";
 
@@ -94,11 +94,24 @@ function App() {
         theme="light"
       />
 
+      {/* WhatsApp Button - Hidden on /log route */}
+      {location.pathname !== "/log" && (
+        <a
+          href="https://wa.me/919730260479"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="fixed bottom-20 right-5 bg-green-500 text-white p-3 rounded-full shadow-lg hover:bg-green-600 transition-all z-50"
+          aria-label="Chat on WhatsApp"
+        >
+          <FaWhatsapp size={20} />
+        </a>
+      )}
+
       {/* Back to Top Button */}
-      {showButton && (
+      {showButton && location.pathname !== "/log" && (
         <button
           onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-          className="fixed bottom-5 right-5 bg-blue-500 text-white p-3 rounded-full shadow-lg hover:bg-blue-700 transition-all z-50"
+          className="fixed bottom-5 right-5 bg-orange-500 text-white p-3 rounded-full shadow-lg hover:bg-orange-700 transition-all z-50"
         >
           <FaArrowUp size={20} />
         </button>
