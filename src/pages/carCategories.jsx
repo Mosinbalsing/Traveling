@@ -14,10 +14,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { MdOutlineMyLocation } from "react-icons/md";
 import { toast } from "react-toastify";
 import axios from 'axios';
+import { taxiAPI } from "@/config/api";
 
 const carCategories = [
   {
-    name: "Mini",
+    type: "Hatchback",
     image: Wagnor,
     seating: "4 + 1 Seater",
     ac: true,
@@ -32,7 +33,7 @@ const carCategories = [
     transmission: "Manual"
   },
   {
-    name: "Prime Sedan",
+    type: "Sedan",
     image: Swift,
     seating: "4 + 1 Seater",
     ac: true,
@@ -47,7 +48,7 @@ const carCategories = [
     transmission: "Manual/Automatic"
   },
   {
-    name: "Prime SUV",
+    type: "SUV",
     image: Innova,
     seating: "6 + 1 Seater",
     ac: true,
@@ -62,7 +63,7 @@ const carCategories = [
     transmission: "Manual"
   },
   {
-    name: "Prime SUV+",
+    type: "Prime SUV",
     image: Crysta,
     seating: "6 + 1 Seater",
     ac: true,
@@ -81,13 +82,14 @@ const carCategories = [
 export default function CarRental() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { bookingDetails, availableTaxis = [] } = location.state || {};
+  console.log("bookingDetails from carCategories",bookingDetails);
+  console.log("availableTaxis from carCategories",availableTaxis);
   
-  // Get booking details from state
-  const [bookingDetails, setBookingDetails] = useState(location.state || {});
-  const { departureDate, pickUpLocation, dropOffLocation, peopleCount, travelType } = bookingDetails;
   
   // Dialog state
   const [isEditOpen, setIsEditOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   // Add check for logged in user
   const checkAuth = () => {
@@ -96,16 +98,45 @@ export default function CarRental() {
   };
 
   // Redirect if no booking details
-  if (!bookingDetails.departureDate) {
-    navigate('/');
-    return null;
+  if (!bookingDetails) {
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <p className="text-xl text-gray-600">No booking details available</p>
+      </div>
+    );
   }
 
-  const cities = ["PUNE", "SHIRDI", "MAHABLESHWAR", "Lonavala", "Mumbai", "Nashik", "Kolhapur", "Ahmadnagar", "Sambhajinagar"];
+  const cities = ["Pune", "Shirdi", "Mahabaleshwar", "Lonavala", "Mumbai", "Nashik", "Kolhapur", "Ahmadnagar", "Sambhajinagar"];
 
-  const handleEditSubmit = (e) => {
+  const handleEditSubmit = async (e) => {
     e.preventDefault();
+    setIsLoading(true);
     setIsEditOpen(false);
+
+    try {
+      const formData = {
+        departureDate: bookingDetails.departureDate,
+        pickUpLocation: bookingDetails.pickUpLocation,
+        dropOffLocation: bookingDetails.dropOffLocation,
+        peopleCount: parseInt(bookingDetails.peopleCount),
+        travelType: bookingDetails.travelType
+      };
+
+      console.log('Re-fetching with updated params:', formData);
+      const response = await taxiAPI.getAvailableTaxis(formData);
+      console.log('Updated API Response:', response);
+
+      if (response.success) {
+        toast.success('Results updated successfully');
+        // Update the availableTaxis state with new data
+        setAvailableTaxis(response.data);
+      }
+    } catch (error) {
+      console.error('Update Error:', error);
+      toast.error('Failed to update results');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const fetchLocation = () => {
@@ -204,7 +235,7 @@ export default function CarRental() {
             <h2 className="text-base lg:text-lg font-semibold">Pickup from</h2>
             <div className="flex items-center gap-2 text-green-600">
               <MapPin className="h-4 w-4 lg:h-5 lg:w-5" />
-              <span className="text-sm lg:text-base">{pickUpLocation}</span>
+              <span className="text-sm lg:text-base">{bookingDetails.pickUpLocation}</span>
             </div>
           </div>
 
@@ -212,7 +243,7 @@ export default function CarRental() {
             <h2 className="text-base lg:text-lg font-semibold">Drop to</h2>
             <div className="flex items-center gap-2 text-red-600">
               <MapPin className="h-4 w-4 lg:h-5 lg:w-5" />
-              <span className="text-sm lg:text-base">{dropOffLocation}</span>
+              <span className="text-sm lg:text-base">{bookingDetails.dropOffLocation}</span>
             </div>
           </div>
 
@@ -220,7 +251,7 @@ export default function CarRental() {
             <h2 className="text-base lg:text-lg font-semibold">Passengers</h2>
             <div className="flex items-center gap-2 text-gray-600">
               <Users className="h-4 w-4 lg:h-5 lg:w-5" />
-              <span className="text-sm lg:text-base">{peopleCount}</span>
+              <span className="text-sm lg:text-base">{bookingDetails.peopleCount}</span>
             </div>
           </div>
 
@@ -228,7 +259,7 @@ export default function CarRental() {
             <h2 className="text-base lg:text-lg font-semibold">Date</h2>
             <div className="flex items-center gap-2 text-gray-600">
               <Calendar className="h-4 w-4 lg:h-5 lg:w-5" />
-              <span className="text-sm lg:text-base">{departureDate}</span>
+              <span className="text-sm lg:text-base">{bookingDetails.departureDate}</span>
             </div>
           </div>
 
@@ -236,7 +267,7 @@ export default function CarRental() {
             <h2 className="text-base lg:text-lg font-semibold">Travel Type </h2>
             <div className="flex items-center gap-2 text-red-600">
               <MapPin className="h-4 w-4 lg:h-5 lg:w-5" />
-              <span className="text-sm lg:text-base">{travelType}</span>
+              <span className="text-sm lg:text-base">{bookingDetails.travelType}</span>
             </div>
           </div>
         </div>
@@ -321,7 +352,12 @@ export default function CarRental() {
                 <Button type="button" variant="outline" onClick={() => setIsEditOpen(false)}>
                   Cancel
                 </Button>
-                <Button type="submit">Save Changes</Button>
+                <Button 
+                  type="submit" 
+                  disabled={isLoading}
+                >
+                  {isLoading ? 'Updating...' : 'Save Changes'}
+                </Button>
               </div>
             </form>
           </DialogContent>
@@ -329,77 +365,83 @@ export default function CarRental() {
 
       </div>
 
-      {/* Main Content (Scrollable) */}
+      {/* Main Content - Available Cars */}
       <div className="flex-1 p-4 lg:p-6 overflow-auto lg:ml-80">
-        <div className="flex justify-end mb-4 lg:mb-6">
-          <h2 className="text-base lg:text-lg font-semibold">Showing {carCategories.length} results</h2>
+        <div className="flex justify-between items-center mb-4 lg:mb-6">
+          <h2 className="text-xl font-semibold">Available Cars</h2>
+          <p className="text-base lg:text-lg">
+            Showing {availableTaxis.length} results
+          </p>
         </div>
+
         <div className="grid gap-4 lg:gap-6">
-          {carCategories.map((car) => (
-            <Card key={car.name} className="overflow-hidden hover:shadow-lg transition-shadow">
-              <CardContent className="p-4 lg:p-6">
-                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between">
-                  {/* Left side - Image and Basic Info */}
-                  <div className="flex flex-col sm:flex-row sm:items-start gap-4 sm:gap-6">
-                    <div className="relative h-48 w-full sm:w-48 shrink-0 overflow-hidden rounded-lg">
-                      <img
-                        src={car.image || "/placeholder.svg"}
-                        alt={car.name}
-                        className="object-contain w-full h-full"
-                      />
-                    </div>
-                    <div className="space-y-4">
-                      <div>
-                        <h3 className="text-xl lg:text-2xl font-bold">{car.name}</h3>
-                        <p className="text-sm lg:text-base text-gray-600">
-                          {car.seating} | {car.ac ? "AC" : "Non-AC"}
-                        </p>
-                      </div>
-                      
-                      {/* Additional Details */}
-                      <div className="grid grid-cols-2 gap-x-6 gap-y-2 text-sm">
-                        <div className="flex items-center gap-2">
-                          <span className="text-gray-600">Transmission:</span>
-                          <span className="font-medium">{car.transmission}</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <span className="text-gray-600">Mileage:</span>
-                          <span className="font-medium">{car.mileage}</span>
-                        </div>
-                      </div>
+          {availableTaxis.map((taxi, index) => {
+            // Find the matching car category
+            const matchedCar = carCategories.find(car => car.type === taxi.type);
 
-                      {/* Features List */}
-                      <div className="space-y-2">
-                        <h4 className="font-semibold text-sm text-gray-600">Features:</h4>
-                        <ul className="grid grid-cols-2 gap-x-6 gap-y-1">
-                          {car.features.map((feature, index) => (
-                            <li key={index} className="text-sm flex items-center gap-2">
-                              <div className="w-1 h-1 bg-green-500 rounded-full"></div>
-                              {feature}
-                            </li>
-                          ))}
-                        </ul>
+            // If no match is found, skip rendering this taxi
+            if (!matchedCar) return null;
+
+            return (
+              <Card key={index} className="overflow-hidden hover:shadow-lg transition-shadow">
+                <CardContent className="p-4 lg:p-6">
+                  <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between">
+                    {/* Car Image and Basic Info */}
+                    <div className="flex flex-col sm:flex-row sm:items-start gap-4 sm:gap-6">
+                      <div className="relative h-48 w-full sm:w-48 shrink-0 overflow-hidden rounded-lg">
+                        <img
+                          src={matchedCar.image}
+                          alt={matchedCar.type}
+                          className="object-contain w-full h-full"
+                        />
                       </div>
+                      <div className="space-y-4">
+                        <div>
+                          <h3 className="text-xl lg:text-2xl font-bold">{matchedCar.type}</h3>
+                          <p className="text-sm lg:text-base text-gray-600">
+                            {matchedCar.seating} | {matchedCar.ac ? "AC" : "Non-AC"}
+                          </p>
+                        </div>
+                        
+                        {/* Features */}
+                        <div className="space-y-2">
+                          <h4 className="font-semibold text-sm text-gray-600">Features:</h4>
+                          <ul className="grid grid-cols-2 gap-x-6 gap-y-1">
+                            {matchedCar.features.map((feature, idx) => (
+                              <li key={idx} className="text-sm flex items-center gap-2">
+                                <div className="w-1 h-1 bg-green-500 rounded-full"></div>
+                                {feature}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Price and Book Button */}
+                    <div className="mt-4 sm:mt-0 flex items-center justify-between sm:flex-col sm:items-end gap-4">
+                      <div className="text-right">
+                        <div className="text-sm text-gray-600">Starting from</div>
+                        <div className="text-xl lg:text-2xl font-bold">₹{matchedCar.price?.toLocaleString()}</div>
+                      </div>
+                      <Button
+                        className="bg-[#76B82A] hover:bg-[#5a8c20] text-sm lg:text-base"
+                        onClick={() => handleBookNow(taxi)}
+                      >
+                        Book Now
+                      </Button>
                     </div>
                   </div>
+                </CardContent>
+              </Card>
+            );
+          })}
 
-                  {/* Right side - Price and Book Button */}
-                  <div className="mt-4 sm:mt-0 flex items-center justify-between sm:flex-col sm:items-end gap-4">
-                    <div className="text-right">
-                      <div className="text-sm text-gray-600">Starting from</div>
-                      <div className="text-xl lg:text-2xl font-bold">₹{car.price.toLocaleString()}</div>
-                    </div>
-                    <Button
-                      className="bg-[#76B82A] hover:bg-[#5a8c20] text-sm lg:text-base"
-                      onClick={() => handleBookNow(car)}
-                    >
-                      Book Now
-                    </Button>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+          {availableTaxis.length === 0 && (
+            <div className="text-center py-8">
+              <p className="text-gray-600">No taxis available for the selected criteria</p>
+            </div>
+          )}
         </div>
       </div>
     </div>

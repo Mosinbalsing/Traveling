@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/u
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import axios from "axios";
+import { taxiAPI } from '@/config/api';
 
 import { MdOutlineMyLocation } from "react-icons/md";
 
@@ -20,6 +21,8 @@ const getCurrentDate = () => {
 };
 
 export default function CarBookingForm() {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
   const navigate = useNavigate(); // Initialize useNavigate
 
   const [bookingDetails, setBookingDetails] = useState({
@@ -58,80 +61,83 @@ export default function CarBookingForm() {
     }
   };
 
-  const handleBookNow = async (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    // First validate required fields
-    const { departureDate, pickUpLocation, dropOffLocation, peopleCount } = bookingDetails;
-    let missingFields = [];
-    if (!departureDate) missingFields.push("Departure Date");
-    if (!pickUpLocation) missingFields.push("Pick Up Location");
-    if (!dropOffLocation) missingFields.push("Drop Off Location");
-    if (!peopleCount) missingFields.push("Number of People");
+    setLoading(true);
+    setError(null);
 
-    if (missingFields.length > 0) {
-      toast.error(`Please fill the following fields: ${missingFields.join(", ")}`, {
-        position: "top-center",
-        autoClose: 3000
-      });
-      return;
-    }
-
-    // Check authentication
-    const token = localStorage.getItem("token");
-    if (!token) {
-      toast.error("Please login first to book a cab", {
-        position: "top-center",
-        autoClose: 3000
-      });
-      return;
-    }
-
-    // Verify token with backend using getuserdata endpoint
     try {
-      const response = await axios.get('https://noble-liberation-production.up.railway.app/api/auth/getuserdata', {
+      // Validate required fields
+      const { departureDate, pickUpLocation, dropOffLocation, peopleCount } = bookingDetails;
+      if (!departureDate || !pickUpLocation || !dropOffLocation || !peopleCount) {
+        throw new Error('Please fill in all required fields');
+      }
+
+      // Check authentication
+      const token = localStorage.getItem('token');
+      if (!token) {
+        toast.error('Please login to continue');
+        navigate('/log');
+        return;
+      }
+
+      // Make direct API call
+      const response = await axios({
+        method: 'POST',
+        url: 'http://localhost:3000/api/auth/available-taxis',
+        data: {
+          pickUpLocation,
+          dropOffLocation,
+          departureDate,
+          peopleCount: parseInt(peopleCount),
+          travelType: bookingDetails.travelType
+        },
         headers: {
-          Authorization: `Bearer ${token}`
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Authorization': `Bearer ${token}`
         }
       });
 
-      if (response.data.success) {
-        // Token is valid, proceed to car selection
+      console.log('API Response:', response.data.data);
+      
+      if (response.data) {
+        toast.success('Successfully fetched available taxis');
         navigate('/book', {
           state: {
-            ...bookingDetails
+            bookingDetails,
+            availableTaxis: response.data.data.availableVehicles 
           }
         });
-      } else {
-        toast.error("Session expired. Please login again");
-        localStorage.removeItem("token");
-        setTimeout(() => {
-          navigate('/log');
-        }, 1500);
       }
+
     } catch (error) {
-      console.log('Auth Error:', error.response || error);
-      
-      if (error.response?.status === 401) {
-        toast.error("Please login again to continue");
-        localStorage.removeItem("token");
-        // setTimeout(() => {
-        //   navigate('/log');
-        // }, 1500);
-      } else {
-        toast.error("Unable to verify login. Please try again.");
-      }
+      console.error('Submit Error:', error);
+      setError(error.message);
+      toast.error(error.message);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const cities = ["PUNE", "SHIRDI", "MAHABLESHWAR", "Lonavala", "Mumbai", "Nashik", "Kolhapur", "Ahmadnagar", "Sambhajinagar"];
+   const cities = [
+    "Pune",
+    "Shirdi",
+    "Mahableshwar",
+    "Lonavala",
+    "Mumbai",
+    "Nashik",
+    "Kolhapur",
+    "ahmadnagar",
+    "sambhaji nagar",
+  ];
   const travelTypes = ["One Way"];
 
   return (
     <div className="w-full max-w-7xl mx-auto bg-[#FAFAFA] relative sm:top-[-200px]">
       <Card className="w-full shadow-md">
         <CardContent className="p-6">
-          <form className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6" onSubmit={handleBookNow}>
+          <form className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6" onSubmit={handleSubmit}>
             <div className="space-y-2">
               <Label className="text-sm font-semibold text-gray-600">DEPARTURE DATE</Label>
               <Input
@@ -207,12 +213,14 @@ export default function CarBookingForm() {
             <div className="flex items-end">
               <Button
                 type="submit"
+                disabled={loading}
                 className="relative px-[43px] py-[14px] flex items-center leading-[24px] uppercase text-white border-2 border-[#ff8201] text-[14px] font-extrabold rounded-full bg-[#ff8201] hover:bg-transparent hover:text-[#ff8201] w-[160px] h-[50px]"
               >
-                BOOK NOW
+                {loading ? 'Loading...' : 'BOOK NOW'}
               </Button>
             </div>
           </form>
+          {error && <p className="text-red-500 mt-2">{error}</p>}
         </CardContent>
       </Card>
     </div>

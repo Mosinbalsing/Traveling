@@ -76,13 +76,13 @@ export default function CarBookingForm() {
   };
 
   const cities = [
-    "PUNE",
-    "SHIRDI",
-    "MAHABLESHWAR",
+    "Pune",
+    "Shirdi",
+    "Mahableshwar",
     "Lonavala",
     "Mumbai",
-    "nashik",
-    "kolhapur",
+    "Nashik",
+    "Kolhapur",
     "ahmadnagar",
     "sambhaji nagar",
   ];
