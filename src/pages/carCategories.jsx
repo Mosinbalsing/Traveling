@@ -6,7 +6,7 @@ import Wagnor from "assets/images/Cars/Wagnor.png";
 import Swift from "assets/images/Cars/Swift.png";
 import Crysta from "assets/images/Cars/crysta.png";
 import Innova from 'assets/images/Cars/Innova.png';
-import { useState, useContext } from "react";
+import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -15,7 +15,6 @@ import { MdOutlineMyLocation } from "react-icons/md";
 import { toast } from "react-toastify";
 import axios from 'axios';
 import { taxiAPI } from "@/config/api";
-import { CarContext } from '../context/CarContext';
 
 const carCategories = [
   {
@@ -81,7 +80,6 @@ const carCategories = [
 ];
 
 export default function CarRental() {
-  const { setCarDetails } = useContext(CarContext);
   const navigate = useNavigate();
   const location = useLocation();
   const { bookingDetails, availableTaxis = [] } = location.state || {};
@@ -171,25 +169,13 @@ export default function CarRental() {
 
   // Modify the book now button click handler
   const handleBookNow = (car) => {
-    const userDetails = {
-      name: "User Name", // Replace with actual user data
-      email: "user@example.com", // Replace with actual user data
-      mobileNumber: "1234567890" // Replace with actual user data
-    };
-
-    // Set car details in context
-    setCarDetails({
-      carName: car.type, // Ensure this matches the car's name/type
-      carImage: car.image,
-      carFeatures: car.features
-    });
-
     navigate('/booking-confirmation', {
       state: {
-        bookingDetails: {
-          ...bookingDetails,
-          price: car.price,
-          ...userDetails
+        carDetails: {
+          carName: car.type,
+          carImage: car.image,
+          carFeatures: car.features,
+          price: car.price
         }
       }
     });
@@ -414,7 +400,7 @@ export default function CarRental() {
                       </div>
                       <Button
                         className="bg-[#76B82A] hover:bg-[#5a8c20] text-sm lg:text-base"
-                        onClick={() => handleBookNow(taxi)}
+                        onClick={() => handleBookNow(matchedCar)}
                       >
                         Book Now
                       </Button>
