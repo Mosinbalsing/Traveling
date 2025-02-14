@@ -175,7 +175,8 @@ export default function CarRental() {
           carName: car.type,
           carImage: car.image,
           carFeatures: car.features,
-          price: car.price
+          price: car.price,
+          data:bookingDetails
         }
       }
     });

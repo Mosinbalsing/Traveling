@@ -11,8 +11,7 @@ export default function BookingConfirmation({ userData }) {
   const location = useLocation();
   const navigate = useNavigate();
   const { carDetails } = location.state || {};
-  const [otp, setOtp] = useState("");
-  const [loadingOtp, setLoadingOtp] = useState(false);
+  const [loadingConfirmation, setLoadingConfirmation] = useState(false);
   const [userInfo, setUserInfo] = useState({
     city: userData.user.city || '',
     address: userData.user.address || '',
@@ -35,16 +34,24 @@ export default function BookingConfirmation({ userData }) {
   console.log("userData", userData.user);
   console.log("carDetails", carDetails);
 
-  const handleGetOtp = async () => {
-    toast.success("OTP sent to your registered mobile number");
-  };
-
   const handleConfirmBooking = async () => {
-    setLoadingOtp(true);
+    setLoadingConfirmation(true);
     try {
+      console.log('Booking Details:', {
+        carName: carDetails.carName,
+        pickupLocation: carDetails.pickupLocation,
+        dropLocation: carDetails.dropLocation,
+        travelType: carDetails.travelType,
+        travelDate: carDetails.travelDate,
+        price: carDetails.price
+      });
+
       const response = await axios.post('http://localhost:3000/api/auth/confirm-booking', {
         carDetails,
-        otp
+        pickupLocation: carDetails.pickupLocation,
+        dropLocation: carDetails.dropLocation,
+        travelType: carDetails.travelType,
+        travelDate: carDetails.travelDate
       });
 
       if (response.data.success) {
@@ -57,7 +64,7 @@ export default function BookingConfirmation({ userData }) {
       console.error('Booking Error:', error);
       toast.error(error.response?.data?.message || 'Failed to confirm booking');
     } finally {
-      setLoadingOtp(false);
+      setLoadingConfirmation(false);
     }
   };
 
@@ -89,6 +96,7 @@ export default function BookingConfirmation({ userData }) {
   };
 
   const {user}=userData;
+  
   return (
     <div className="flex justify-center items-center min-h-screen bg-gray-50 p-4">
       <div className="max-w-[1100px] w-full">
@@ -163,7 +171,7 @@ export default function BookingConfirmation({ userData }) {
                   value={userInfo.address}
                   onChange={handleUserInfoChange}
                   className="mt-1 border-0 focus:ring-0 bg-transparent placeholder:text-gray-400"
-                  placeholder="Enter complete address"
+                  placeholder="Enter Pickup address"
                 />
               </div>
 
@@ -190,38 +198,36 @@ export default function BookingConfirmation({ userData }) {
                 </div>
               </div>
 
-              <div className="space-y-4 mt-6">
-                <div className="flex justify-center">
-                  <Button onClick={handleGetOtp} className="w-full" data-aos="fade-up">Get OTP</Button>
+              <div className="bg-gray-50 p-4 rounded-lg" data-aos="zoom-in" data-aos-delay="300">
+                <h3 className="font-semibold">Travel Details</h3>
+                <div className="grid gap-2 mt-2">
+                  <div>
+                    <span className="font-medium">Pickup Location:</span>
+                    <p>{carDetails.data.pickUpLocation}</p>
+                  </div>
+                  <div>
+                    <span className="font-medium">Drop Location:</span>
+                    <p>{carDetails.data.dropOffLocation}</p>
+                  </div>
+                  <div>
+                    <span className="font-medium">Travel Type:</span>
+                    <p>{carDetails.data.travelType}</p>
+                  </div>
+                  <div>
+                    <span className="font-medium">Travel Date:</span>
+                    <p>{carDetails.data.departureDate}</p>
+                  </div>
                 </div>
-                <Input
-                  type="text"
-                  placeholder="Enter OTP"
-                  value={otp}
-                  onChange={(e) => setOtp(e.target.value)}
-                  className="w-full"
-                  data-aos="fade-up"
-                  data-aos-delay="100"
-                />
-                <Button 
-                  onClick={handleConfirmBooking} 
-                  disabled={loadingOtp}
-                  className="w-full"
-                  data-aos="fade-up"
-                  data-aos-delay="200"
-                >
-                  {loadingOtp ? 'Confirming...' : 'Confirm Booking'}
-                </Button>
               </div>
 
-              <Button
-                onClick={handleUpdateUserInfo}
-                disabled={updating}
-                className="w-full mt-4"
+              <Button 
+                onClick={handleConfirmBooking} 
+                disabled={loadingConfirmation}
+                className="w-full mt-6"
                 data-aos="fade-up"
-                data-aos-delay="800"
+                data-aos-delay="200"
               >
-                {updating ? 'Updating...' : 'Update Information'}
+                {loadingConfirmation ? 'Confirming...' : 'Confirm Booking'}
               </Button>
             </div>
           </div>
