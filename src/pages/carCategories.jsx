@@ -13,7 +13,6 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { MdOutlineMyLocation } from "react-icons/md";
 import { toast } from "react-toastify";
-import axios from 'axios';
 import { taxiAPI } from "@/config/api";
 
 const carCategories = [
@@ -88,13 +87,6 @@ export default function CarRental() {
   const [isLoading, setIsLoading] = useState(false);
   const [editedBookingDetails, setEditedBookingDetails] = useState(bookingDetails);
 
-  // Add check for logged in user
-  const checkAuth = () => {
-    const token = localStorage.getItem("token");
-    return !!token;
-  };
-
-  // Redirect if no booking details
   if (!bookingDetails) {
     return (
       <div className="flex justify-center items-center min-h-screen">
@@ -119,9 +111,7 @@ export default function CarRental() {
         travelType: editedBookingDetails.travelType
       };
 
-      console.log('Re-fetching with updated params:', formData);
       const response = await taxiAPI.getAvailableTaxis(formData);
-      console.log('Updated API Response:', response);
 
       if (response.success) {
         toast.success('Results updated successfully');
@@ -163,7 +153,6 @@ export default function CarRental() {
     }
   };
 
-  // Modify the book now button click handler
   const handleBookNow = (car) => {
     navigate('/booking-confirmation', {
       state: {
@@ -179,8 +168,7 @@ export default function CarRental() {
   };
 
   return (
-    <div className="flex flex-col lg:flex-row bg-gray-50 min-h-screen">
-      {/* Sidebar Header (Fixed on desktop, wraps on mobile) */}
+    <div className="flex flex-col lg:flex-row bg-gray-50 min-h-screen sm:mt-0 mt-[100px]">
       <div className="w-full lg:w-80 bg-white p-4 lg:p-6 shadow-lg lg:fixed lg:h-screen lg:overflow-y-auto">
         <div className="flex justify-between items-center mb-4">
           <Button variant="outline" className="w-[48%]">
@@ -237,7 +225,6 @@ export default function CarRental() {
           </div>
         </div>
 
-        {/* Edit Dialog */}
         <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
           <DialogContent className="sm:max-w-[425px] bg-white">
             <DialogHeader>
@@ -330,7 +317,6 @@ export default function CarRental() {
 
       </div>
 
-      {/* Main Content - Available Cars */}
       <div className="flex-1 p-4 lg:p-6 overflow-auto lg:ml-80">
         <div className="flex justify-between items-center mb-4 lg:mb-6">
           <h2 className="text-xl font-semibold">Available Cars</h2>
@@ -341,13 +327,11 @@ export default function CarRental() {
 
         <div className="grid gap-4 lg:gap-6">
           {availableTaxisState.map((taxi, index) => {
-            // Find the matching car category with normalized comparison
             const matchedCar = carCategories.find(car => 
               car.type.toLowerCase().replace(/[\s_-]/g, '') === 
               taxi.type.toLowerCase().replace(/[\s_-]/g, '')
             );
 
-            // Log if no match is found
             if (!matchedCar) {
               console.log("No match found for taxi type:", taxi.type);
               return null;
@@ -357,7 +341,6 @@ export default function CarRental() {
               <Card key={index} className="overflow-hidden hover:shadow-lg transition-shadow">
                 <CardContent className="p-4 lg:p-6">
                   <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between">
-                    {/* Car Image and Basic Info */}
                     <div className="flex flex-col sm:flex-row sm:items-start gap-4 sm:gap-6">
                       <div className="relative h-48 w-full sm:w-48 shrink-0 overflow-hidden rounded-lg">
                         <img
@@ -374,7 +357,6 @@ export default function CarRental() {
                           </p>
                         </div>
                         
-                        {/* Features */}
                         <div className="space-y-2">
                           <h4 className="font-semibold text-sm text-gray-600">Features:</h4>
                           <ul className="grid grid-cols-2 gap-x-6 gap-y-1">
@@ -389,7 +371,6 @@ export default function CarRental() {
                       </div>
                     </div>
 
-                    {/* Price and Book Button */}
                     <div className="mt-4 sm:mt-0 flex items-center justify-between sm:flex-col sm:items-end gap-4">
                       <div className="text-right">
                         <div className="text-sm text-gray-600">Starting from</div>

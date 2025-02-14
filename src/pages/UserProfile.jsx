@@ -1,23 +1,21 @@
 import { useNavigate } from 'react-router-dom';
-import { authAPI } from '@/config/api';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 
-
 const UserProfile = ({ userData }) => {
     const navigate = useNavigate();
     const [error, setError] = useState(null);
-    console.log("userData from UserProfile", userData);
-    const { user } = userData;
+    const { user } = userData || {};
+
     const handleLogout = () => {
         localStorage.removeItem('token');
         navigate('/log');
     };
 
-    if (!userData) {
+    if (!user) {
         return <p>No user data available</p>;
     }
 
@@ -39,7 +37,7 @@ const UserProfile = ({ userData }) => {
                             </Avatar>
                             <div className="flex-1">
                                 <CardTitle className="text-2xl">{user.name}</CardTitle>
-                                <p className="text-sm text-muted-foreground">@{userData.username}</p>
+                                <p className="text-sm text-muted-foreground">@{user.username}</p>
                             </div>
                             <Button variant="destructive" onClick={handleLogout}>
                                 Logout
