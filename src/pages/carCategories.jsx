@@ -83,13 +83,10 @@ export default function CarRental() {
   const navigate = useNavigate();
   const location = useLocation();
   const { bookingDetails, availableTaxis = [] } = location.state || {};
-  console.log("bookingDetails from carCategories", bookingDetails);
-  console.log("availableTaxis from carCategories", availableTaxis);
-  
-  
-  // Dialog state
+  const [availableTaxisState, setAvailableTaxis] = useState(availableTaxis);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [editedBookingDetails, setEditedBookingDetails] = useState(bookingDetails);
 
   // Add check for logged in user
   const checkAuth = () => {
@@ -115,11 +112,11 @@ export default function CarRental() {
 
     try {
       const formData = {
-        departureDate: bookingDetails.departureDate,
-        pickUpLocation: bookingDetails.pickUpLocation,
-        dropOffLocation: bookingDetails.dropOffLocation,
-        peopleCount: parseInt(bookingDetails.peopleCount),
-        travelType: bookingDetails.travelType
+        departureDate: editedBookingDetails.departureDate,
+        pickUpLocation: editedBookingDetails.pickUpLocation,
+        dropOffLocation: editedBookingDetails.dropOffLocation,
+        peopleCount: parseInt(editedBookingDetails.peopleCount),
+        travelType: editedBookingDetails.travelType
       };
 
       console.log('Re-fetching with updated params:', formData);
@@ -128,8 +125,7 @@ export default function CarRental() {
 
       if (response.success) {
         toast.success('Results updated successfully');
-        // Update the availableTaxis state with new data
-        setAvailableTaxis(response.data);
+        setAvailableTaxis(response.data.availableVehicles);
       }
     } catch (error) {
       console.error('Update Error:', error);
@@ -153,7 +149,7 @@ export default function CarRental() {
             let locationText = `${address.village || address.town || address.city}, ${address.county}, ${address.state}`;
             locationText = locationText.replace("undefined, ", "").replace(", undefined", "");
 
-            setBookingDetails(prev => ({
+            setEditedBookingDetails(prev => ({
               ...prev,
               pickUpLocation: locationText,
             }));
@@ -176,7 +172,7 @@ export default function CarRental() {
           carImage: car.image,
           carFeatures: car.features,
           price: car.price,
-          data:bookingDetails
+          data: editedBookingDetails
         }
       }
     });
@@ -204,7 +200,7 @@ export default function CarRental() {
             <h2 className="text-base lg:text-lg font-semibold">Pickup from</h2>
             <div className="flex items-center gap-2 text-green-600">
               <MapPin className="h-4 w-4 lg:h-5 lg:w-5" />
-              <span className="text-sm lg:text-base">{bookingDetails.pickUpLocation}</span>
+              <span className="text-sm lg:text-base">{editedBookingDetails.pickUpLocation}</span>
             </div>
           </div>
 
@@ -212,7 +208,7 @@ export default function CarRental() {
             <h2 className="text-base lg:text-lg font-semibold">Drop to</h2>
             <div className="flex items-center gap-2 text-red-600">
               <MapPin className="h-4 w-4 lg:h-5 lg:w-5" />
-              <span className="text-sm lg:text-base">{bookingDetails.dropOffLocation}</span>
+              <span className="text-sm lg:text-base">{editedBookingDetails.dropOffLocation}</span>
             </div>
           </div>
 
@@ -220,7 +216,7 @@ export default function CarRental() {
             <h2 className="text-base lg:text-lg font-semibold">Passengers</h2>
             <div className="flex items-center gap-2 text-gray-600">
               <Users className="h-4 w-4 lg:h-5 lg:w-5" />
-              <span className="text-sm lg:text-base">{bookingDetails.peopleCount}</span>
+              <span className="text-sm lg:text-base">{editedBookingDetails.peopleCount}</span>
             </div>
           </div>
 
@@ -228,7 +224,7 @@ export default function CarRental() {
             <h2 className="text-base lg:text-lg font-semibold">Date</h2>
             <div className="flex items-center gap-2 text-gray-600">
               <Calendar className="h-4 w-4 lg:h-5 lg:w-5" />
-              <span className="text-sm lg:text-base">{bookingDetails.departureDate}</span>
+              <span className="text-sm lg:text-base">{editedBookingDetails.departureDate}</span>
             </div>
           </div>
 
@@ -236,7 +232,7 @@ export default function CarRental() {
             <h2 className="text-base lg:text-lg font-semibold">Travel Type </h2>
             <div className="flex items-center gap-2 text-red-600">
               <MapPin className="h-4 w-4 lg:h-5 lg:w-5" />
-              <span className="text-sm lg:text-base">{bookingDetails.travelType}</span>
+              <span className="text-sm lg:text-base">{editedBookingDetails.travelType}</span>
             </div>
           </div>
         </div>
@@ -252,8 +248,8 @@ export default function CarRental() {
                 <Label>Departure Date</Label>
                 <Input
                   type="date"
-                  value={bookingDetails.departureDate}
-                  onChange={(e) => setBookingDetails(prev => ({
+                  value={editedBookingDetails.departureDate}
+                  onChange={(e) => setEditedBookingDetails(prev => ({
                     ...prev,
                     departureDate: e.target.value
                   }))}
@@ -265,8 +261,8 @@ export default function CarRental() {
                 <div className="flex items-center border border-gray-300 rounded-md">
                   <Input
                     type="text"
-                    value={bookingDetails.pickUpLocation}
-                    onChange={(e) => setBookingDetails(prev => ({
+                    value={editedBookingDetails.pickUpLocation}
+                    onChange={(e) => setEditedBookingDetails(prev => ({
                       ...prev,
                       pickUpLocation: e.target.value
                     }))}
@@ -285,8 +281,8 @@ export default function CarRental() {
               <div className="space-y-2">
                 <Label>Drop Location</Label>
                 <Select 
-                  value={bookingDetails.dropOffLocation}
-                  onValueChange={(value) => setBookingDetails(prev => ({
+                  value={editedBookingDetails.dropOffLocation}
+                  onValueChange={(value) => setEditedBookingDetails(prev => ({
                     ...prev,
                     dropOffLocation: value
                   }))}
@@ -309,8 +305,8 @@ export default function CarRental() {
                 <Input
                   type="number"
                   min="1"
-                  value={bookingDetails.peopleCount}
-                  onChange={(e) => setBookingDetails(prev => ({
+                  value={editedBookingDetails.peopleCount}
+                  onChange={(e) => setEditedBookingDetails(prev => ({
                     ...prev,
                     peopleCount: e.target.value
                   }))}
@@ -339,12 +335,12 @@ export default function CarRental() {
         <div className="flex justify-between items-center mb-4 lg:mb-6">
           <h2 className="text-xl font-semibold">Available Cars</h2>
           <p className="text-base lg:text-lg">
-            Showing {availableTaxis.length} results
+            Showing {availableTaxisState.length} results
           </p>
         </div>
 
         <div className="grid gap-4 lg:gap-6">
-          {availableTaxis.map((taxi, index) => {
+          {availableTaxisState.map((taxi, index) => {
             // Find the matching car category with normalized comparison
             const matchedCar = carCategories.find(car => 
               car.type.toLowerCase().replace(/[\s_-]/g, '') === 
@@ -412,7 +408,7 @@ export default function CarRental() {
             );
           })}
 
-          {availableTaxis.length === 0 && (
+          {availableTaxisState.length === 0 && (
             <div className="text-center py-8">
               <p className="text-gray-600">No taxis available for the selected criteria</p>
             </div>
