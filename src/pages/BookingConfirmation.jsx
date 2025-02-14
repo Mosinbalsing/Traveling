@@ -105,7 +105,8 @@ export default function BookingConfirmation({ userData }) {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           {/* Car Details Column */}
           <div className="bg-white rounded-xl shadow-lg p-6" data-aos="fade-right">
-            <div className="space-y-4">
+            <div className="space-y-6">
+              {/* Car Image */}
               <div className="aspect-video overflow-hidden rounded-lg">
                 <img 
                   src={carDetails.carImage} 
@@ -114,22 +115,58 @@ export default function BookingConfirmation({ userData }) {
                 />
               </div>
               
+              {/* Bento Grid Layout for Car Info and Travel Details */}
               <div className="grid grid-cols-2 gap-4">
+                {/* Car Name */}
                 <div className="bg-gray-50 p-4 rounded-lg" data-aos="zoom-in" data-aos-delay="100">
                   <h3 className="font-semibold">Car Name</h3>
                   <p>{carDetails.carName}</p>
                 </div>
+                
+                {/* Price */}
                 <div className="bg-gray-50 p-4 rounded-lg" data-aos="zoom-in" data-aos-delay="200">
                   <h3 className="font-semibold">Price</h3>
                   <p>₹{carDetails.price}</p>
                 </div>
-              </div>
 
-              <div className="bg-gray-50 p-4 rounded-lg" data-aos="zoom-in" data-aos-delay="300">
+                {/* Pickup Location */}
+                <div className="bg-gray-50 p-4 rounded-lg" data-aos="zoom-in" data-aos-delay="300">
+                  <h3 className="font-semibold">Pickup Location</h3>
+                  <p className="text-sm">{carDetails.data.pickUpLocation}</p>
+                </div>
+
+                {/* Drop Location */}
+                <div className="bg-gray-50 p-4 rounded-lg" data-aos="zoom-in" data-aos-delay="400">
+                  <h3 className="font-semibold">Drop Location</h3>
+                  <p className="text-sm">{carDetails.data.dropOffLocation}</p>
+                </div>
+
+                {/* Travel Type */}
+                <div className="bg-gray-50 p-4 rounded-lg" data-aos="zoom-in" data-aos-delay="500">
+                  <h3 className="font-semibold">Travel Type</h3>
+                  <p>{carDetails.data.travelType}</p>
+                </div>
+
+                {/* Travel Date */}
+                <div className="bg-gray-50 p-4 rounded-lg" data-aos="zoom-in" data-aos-delay="600">
+                  <h3 className="font-semibold">Travel Date</h3>
+                  <p>{carDetails.data.departureDate}</p>
+                </div>
+                <div className="bg-gray-50 p-4 rounded-lg" data-aos="zoom-in" data-aos-delay="600">
+                  <h3 className="font-semibold">Travel Type</h3>
+                  <p>{carDetails.data.travelType}</p>
+                </div>
+              </div>
+            
+              {/* Car Features */}
+              <div className="bg-gray-50 p-4 rounded-lg" data-aos="zoom-in" data-aos-delay="700">
                 <h3 className="font-semibold mb-2">Car Features:</h3>
                 <ul className="grid grid-cols-2 gap-2">
                   {carDetails.carFeatures.map((feature, index) => (
-                    <li key={index} className="text-sm">{feature}</li>
+                    <li key={index} className="text-sm flex items-center gap-2">
+                      <div className="w-1 h-1 bg-green-500 rounded-full"></div>
+                      {feature}
+                    </li>
                   ))}
                 </ul>
               </div>
@@ -198,34 +235,12 @@ export default function BookingConfirmation({ userData }) {
                 </div>
               </div>
 
-              <div className="bg-gray-50 p-4 rounded-lg" data-aos="zoom-in" data-aos-delay="300">
-                <h3 className="font-semibold">Travel Details</h3>
-                <div className="grid gap-2 mt-2">
-                  <div>
-                    <span className="font-medium">Pickup Location:</span>
-                    <p>{carDetails.data.pickUpLocation}</p>
-                  </div>
-                  <div>
-                    <span className="font-medium">Drop Location:</span>
-                    <p>{carDetails.data.dropOffLocation}</p>
-                  </div>
-                  <div>
-                    <span className="font-medium">Travel Type:</span>
-                    <p>{carDetails.data.travelType}</p>
-                  </div>
-                  <div>
-                    <span className="font-medium">Travel Date:</span>
-                    <p>{carDetails.data.departureDate}</p>
-                  </div>
-                </div>
-              </div>
-
               <Button 
                 onClick={handleConfirmBooking} 
                 disabled={loadingConfirmation}
                 className="w-full mt-6"
                 data-aos="fade-up"
-                data-aos-delay="200"
+                data-aos-delay="800"
               >
                 {loadingConfirmation ? 'Confirming...' : 'Confirm Booking'}
               </Button>
