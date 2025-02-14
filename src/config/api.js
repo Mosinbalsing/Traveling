@@ -1,20 +1,33 @@
 import axios from 'axios';
-import { carCategories } from '@/data/carCategories'; // Create this file if it doesn't exist
 
-// export const BASE_URL = 'http://localhost:3000';
+
+// const BASE_URL = 'http://localhost:3000';
 
 // Use the correct Railway URL
 const BASE_URL = 'https://noble-liberation-production.up.railway.app';
 
 // Create a simple axios instance
-const axiosInstance = axios.create({
+const api = axios.create({
   baseURL: BASE_URL,
   headers: {
     'Content-Type': 'application/json',
     'Accept': 'application/json'
-  },
-  withCredentials: true
+  }
 });
+
+// Add a request interceptor to add the token
+api.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
 
 // API endpoints
 export const API_ENDPOINTS = {
@@ -95,36 +108,10 @@ const authAPI = {
 const taxiAPI = {
   getAvailableTaxis: async (formData) => {
     try {
-      const token = localStorage.getItem('token');
-      
-      if (!token) {
-        throw new Error('Authentication required');
-      }
-
-      const response = await axios({
-        method: 'POST',
-        url: `${BASE_URL}${API_ENDPOINTS.SEARCH_TAXIS}`,
-        data: formData,
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-          'Authorization': `Bearer ${token}`
-        }
-      });
-
-      console.log('Raw API Response:', response.data);
-
-      return {
-        success: true,
-        data: response.data?.availableTaxis || carCategories
-      };
-
+      const response = await api.post('/api/auth/available-taxis', formData);
+      return response.data;
     } catch (error) {
-      console.error('Get Available Taxis Error:', error);
-      return {
-        success: true,
-        data: carCategories
-      };
+      throw error;
     }
   }
 };

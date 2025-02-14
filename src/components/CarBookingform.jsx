@@ -7,7 +7,6 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import axios from "axios";
 import { taxiAPI } from '@/config/api';
 
 import { MdOutlineMyLocation } from "react-icons/md";
@@ -67,13 +66,11 @@ export default function CarBookingForm() {
     setError(null);
 
     try {
-      // Validate required fields
       const { departureDate, pickUpLocation, dropOffLocation, peopleCount } = bookingDetails;
       if (!departureDate || !pickUpLocation || !dropOffLocation || !peopleCount) {
         throw new Error('Please fill in all required fields');
       }
 
-      // Check authentication
       const token = localStorage.getItem('token');
       if (!token) {
         toast.error('Please login to continue');
@@ -81,36 +78,25 @@ export default function CarBookingForm() {
         return;
       }
 
-      // Make direct API call
-      const response = await axios({
-        method: 'POST',
-        url: 'http://localhost:3000/api/auth/available-taxis',
-        data: {
-          pickUpLocation,
-          dropOffLocation,
-          departureDate,
-          peopleCount: parseInt(peopleCount),
-          travelType: bookingDetails.travelType
-        },
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-          'Authorization': `Bearer ${token}`
-        }
-      });
+      const formData = {
+        pickUpLocation,
+        dropOffLocation,
+        departureDate,
+        peopleCount: parseInt(peopleCount),
+        travelType: bookingDetails.travelType
+      };
 
-      console.log('API Response:', response.data.data);
+      const response = await taxiAPI.getAvailableTaxis(formData);
       
       if (response.data) {
         toast.success('Successfully fetched available taxis');
         navigate('/book', {
           state: {
             bookingDetails,
-            availableTaxis: response.data.data.availableVehicles 
+            availableTaxis: response.data.availableVehicles 
           }
         });
       }
-
     } catch (error) {
       console.error('Submit Error:', error);
       setError(error.message);

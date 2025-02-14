@@ -7,6 +7,10 @@ import "aos/dist/aos.css";
 import { FaArrowUp, FaWhatsapp } from "react-icons/fa";
 import Navbar from "@/components/Navbar";
 import loder from "./assets/loaders/preloader.gif";
+import { authAPI } from "@/config/api";
+import CarBookingForm from "@/components/CarBookingForm";
+import BookingConfirmation from "@/pages/BookingConfirmation";
+import { CarProvider } from './context/CarContext';
 
 // Lazy load pages
 const Home = lazy(() => import("@/pages/Home"));
@@ -32,6 +36,7 @@ function App() {
   const location = useLocation();
   const [loading, setLoading] = useState(false);
   const [showButton, setShowButton] = useState(false);
+  const [userData, setUserData] = useState(null);
 
   useEffect(() => {
     AOS.init({ duration: 1000, once: true });
@@ -53,72 +58,93 @@ function App() {
     return () => clearTimeout(timer);
   }, [location.pathname]);
 
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) {
+          return;
+        }
+
+        const data = await authAPI.getUserData(token);
+        setUserData(data);
+      } catch (error) {
+        console.error('Error fetching user data:', error);
+      }
+    };
+
+    fetchUserData();
+  }, []);
+
   return (
-    <>
-      {location.pathname !== "/log" && (
-        <>
-          <Navbar /> 
-          <ScrollToTop />
-        </>
-      )}
+    <CarProvider>
+      <>
+        {location.pathname !== "/log" && (
+          <>
+            <Navbar />
+            <ScrollToTop />
+          </>
+        )}
 
-      {loading && (
-        <div className="fixed inset-0 flex items-center justify-center bg-white z-50">
-          <img src={loder} alt="Loading..." />
-        </div>
-      )}
+        {loading && (
+          <div className="fixed inset-0 flex items-center justify-center bg-white z-50">
+            <img src={loder} alt="Loading..." />
+          </div>
+        )}
 
-      <Suspense fallback={<div className="fixed inset-0 flex items-center justify-center bg-white z-50"><img src={loder} alt="Loading..." /></div>}>
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/booking" element={<About />} />
-          <Route path="/book" element={<CarRental />} />
-          <Route path="/services" element={<Services />} />
-          <Route path="/cars" element={<Cars />} />
-          <Route path="/contact" element={<Contact />} />
-          <Route path="/log" element={<SlidingAuthForm />} />
-          <Route path="/profile" element={<UserProfile />} />
-        </Routes>
-      </Suspense>
+        <Suspense fallback={<div className="fixed inset-0 flex items-center justify-center bg-white z-50"><img src={loder} alt="Loading..." /></div>}>
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/booking" element={<About />} />
+            <Route path="/book" element={<CarRental />} />
+            <Route path="/services" element={<Services />} />
+            <Route path="/cars" element={<Cars />} />
+            <Route path="/contact" element={<Contact />} />
+            <Route path="/log" element={<SlidingAuthForm />} />
+            <Route path="/profile" element={<UserProfile />} />
+            <Route path="/booking-confirmation" element={<BookingConfirmation userData={userData} />} />
+          </Routes>
+        </Suspense>
 
-      <ToastContainer
-        position="top-right"
-        autoClose={3000}
-        hideProgressBar={false}
-        newestOnTop={false}
-        closeOnClick
-        rtl={false}
-        pauseOnFocusLoss
-        draggable
-        pauseOnHover
-        theme="light"
-      />
+        <ToastContainer
+          position="top-right"
+          autoClose={3000}
+          hideProgressBar={false}
+          newestOnTop={false}
+          closeOnClick
+          rtl={false}
+          pauseOnFocusLoss
+          draggable
+          pauseOnHover
+          theme="light"
+        />
 
-      {/* WhatsApp Button - Position changes based on Back to Top button visibility */}
-      {location.pathname !== "/log" && (
-        <a
-          href="https://wa.me/919730260479"
-          target="_blank"
-          rel="noopener noreferrer"
-          className={`fixed right-5 bg-green-500 text-white p-3 rounded-full shadow-lg hover:bg-green-600 transition-all z-50 ${
-            showButton ? 'bottom-20' : 'bottom-5'
-          }`}
-          aria-label="Chat on WhatsApp"
-        >
-          <FaWhatsapp size={20} />
-        </a>
-      )}
+        {/* WhatsApp Button - Position changes based on Back to Top button visibility */}
+        {location.pathname !== "/log" && (
+          <a
+            href="https://wa.me/919730260479"
+            target="_blank"
+            rel="noopener noreferrer"
+            className={`fixed right-5 bg-green-500 text-white p-3 rounded-full shadow-lg hover:bg-green-600 transition-all z-50 ${
+              showButton ? 'bottom-20' : 'bottom-5'
+            }`}
+            aria-label="Chat on WhatsApp"
+          >
+            <FaWhatsapp size={20} />
+          </a>
+        )}
 
-      {/* Back to Top Button */}
-      {showButton && location.pathname !== "/log" && (
-        <button
-          onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-          className="fixed bottom-5 right-5 bg-orange-500 text-white p-3 rounded-full shadow-lg hover:bg-orange-700 transition-all z-50"
-        >
-          <FaArrowUp size={20} />
-        </button>
-      )}
-    </>
+        {/* Back to Top Button */}
+        {showButton && location.pathname !== "/log" && (
+          <button
+            onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+            className="fixed bottom-5 right-5 bg-orange-500 text-white p-3 rounded-full shadow-lg hover:bg-orange-700 transition-all z-50"
+          >
+            <FaArrowUp size={20} />
+          </button>
+        )}
+      </>
+    </CarProvider>
   );
 }
 

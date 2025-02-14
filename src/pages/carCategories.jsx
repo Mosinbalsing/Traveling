@@ -6,7 +6,7 @@ import Wagnor from "assets/images/Cars/Wagnor.png";
 import Swift from "assets/images/Cars/Swift.png";
 import Crysta from "assets/images/Cars/crysta.png";
 import Innova from 'assets/images/Cars/Innova.png';
-import { useState } from "react";
+import { useState, useContext } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -15,6 +15,7 @@ import { MdOutlineMyLocation } from "react-icons/md";
 import { toast } from "react-toastify";
 import axios from 'axios';
 import { taxiAPI } from "@/config/api";
+import { CarContext } from '../context/CarContext';
 
 const carCategories = [
   {
@@ -80,11 +81,12 @@ const carCategories = [
 ];
 
 export default function CarRental() {
+  const { setCarDetails } = useContext(CarContext);
   const navigate = useNavigate();
   const location = useLocation();
   const { bookingDetails, availableTaxis = [] } = location.state || {};
-  console.log("bookingDetails from carCategories",bookingDetails);
-  console.log("availableTaxis from carCategories",availableTaxis);
+  console.log("bookingDetails from carCategories", bookingDetails);
+  console.log("availableTaxis from carCategories", availableTaxis);
   
   
   // Dialog state
@@ -168,49 +170,29 @@ export default function CarRental() {
   };
 
   // Modify the book now button click handler
-  const handleBookNow = async (car) => {
-    const token = localStorage.getItem("token");
-    
-    if (!token) {
-      toast.warning("Please login first to book a cab", {
-        position: "top-center",
-        autoClose: 2000,
-      });
-      setTimeout(() => {
-        navigate('/log');
-      }, 2000);
-      return;
-    }
+  const handleBookNow = (car) => {
+    const userDetails = {
+      name: "User Name", // Replace with actual user data
+      email: "user@example.com", // Replace with actual user data
+      mobileNumber: "1234567890" // Replace with actual user data
+    };
 
-    // Verify token with backend
-    try {
-      const response = await axios.get('https://noble-liberation-production.up.railway.app/api/auth/verify-token', {
-        headers: {
-          Authorization: `Bearer ${token}`
+    // Set car details in context
+    setCarDetails({
+      carName: car.type, // Ensure this matches the car's name/type
+      carImage: car.image,
+      carFeatures: car.features
+    });
+
+    navigate('/booking-confirmation', {
+      state: {
+        bookingDetails: {
+          ...bookingDetails,
+          price: car.price,
+          ...userDetails
         }
-      });
-
-      if (response.data.success) {
-        // Token is valid, proceed with booking
-        navigate('/booking-confirmation', {
-          state: {
-            ...bookingDetails,
-            car: car.name,
-            price: car.price
-          }
-        });
-      } else {
-        // Token is invalid
-        toast.error("Session expired. Please login again");
-        localStorage.removeItem("token");
-        navigate('/log');
       }
-    } catch (error) {
-      // Handle error
-      toast.error("Please login again to continue");
-      localStorage.removeItem("token");
-      navigate('/log');
-    }
+    });
   };
 
   return (
@@ -376,11 +358,17 @@ export default function CarRental() {
 
         <div className="grid gap-4 lg:gap-6">
           {availableTaxis.map((taxi, index) => {
-            // Find the matching car category
-            const matchedCar = carCategories.find(car => car.type === taxi.type);
+            // Find the matching car category with normalized comparison
+            const matchedCar = carCategories.find(car => 
+              car.type.toLowerCase().replace(/[\s_-]/g, '') === 
+              taxi.type.toLowerCase().replace(/[\s_-]/g, '')
+            );
 
-            // If no match is found, skip rendering this taxi
-            if (!matchedCar) return null;
+            // Log if no match is found
+            if (!matchedCar) {
+              console.log("No match found for taxi type:", taxi.type);
+              return null;
+            }
 
             return (
               <Card key={index} className="overflow-hidden hover:shadow-lg transition-shadow">
