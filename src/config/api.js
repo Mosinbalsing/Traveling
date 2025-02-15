@@ -1,10 +1,10 @@
 import axios from 'axios';
 
 
-// const BASE_URL = 'http://localhost:3000';
+const BASE_URL = 'http://localhost:3000';
 
 // Use the correct Railway URL
-const BASE_URL = 'https://noble-liberation-production.up.railway.app';
+// const BASE_URL = 'https://noble-liberation-production.up.railway.app';
 
 // Create a simple axios instance
 const api = axios.create({
@@ -97,6 +97,7 @@ const authAPI = {
         },
         withCredentials: true
       });
+      console.log("getUserData API response:", response.data);
       return response.data;
     } catch (error) {
       console.error('Get User Data Error:', error);

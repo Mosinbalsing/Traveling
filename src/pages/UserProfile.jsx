@@ -1,23 +1,45 @@
 import { useNavigate } from 'react-router-dom';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import { authAPI } from '@/config/api';
 
-const UserProfile = ({ userData }) => {
+const UserProfile = () => {
     const navigate = useNavigate();
+    const [userData, setUserData] = useState(null);
     const [error, setError] = useState(null);
-    const { user } = userData || {};
+
+    useEffect(() => {
+        const fetchUserData = async () => {
+            try {
+                const token = localStorage.getItem('token');
+                if (!token) {
+                    setError('No token found');
+                    return;
+                }
+                const data = await authAPI.getUserData(token);
+                setUserData(data);
+            } catch (error) {
+                console.error('Error fetching user data:', error);
+                setError('Failed to fetch user data');
+            }
+        };
+
+        fetchUserData();
+    }, []);
+
+    if (!userData) {
+        return <p>Loading user data...</p>;
+    }
+
+    const { user } = userData;
 
     const handleLogout = () => {
         localStorage.removeItem('token');
         navigate('/log');
     };
-
-    if (!user) {
-        return <p>No user data available</p>;
-    }
 
     return (
         <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
