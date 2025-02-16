@@ -103,12 +103,21 @@ export default function CarRental() {
     setIsEditOpen(false);
 
     try {
+      const { departureDate, pickUpLocation, dropOffLocation, peopleCount, travelType } = editedBookingDetails;
+      if (!departureDate || !pickUpLocation || !dropOffLocation || !peopleCount) {
+        throw new Error('Please fill in all required fields');
+      }
+
+      if (pickUpLocation === dropOffLocation) {
+        throw new Error('Pickup and drop-off locations cannot be the same');
+      }
+
       const formData = {
-        departureDate: editedBookingDetails.departureDate,
-        pickUpLocation: editedBookingDetails.pickUpLocation,
-        dropOffLocation: editedBookingDetails.dropOffLocation,
-        peopleCount: parseInt(editedBookingDetails.peopleCount),
-        travelType: editedBookingDetails.travelType
+        departureDate,
+        pickUpLocation,
+        dropOffLocation,
+        peopleCount: parseInt(peopleCount),
+        travelType
       };
 
       const response = await taxiAPI.getAvailableTaxis(formData);
@@ -119,37 +128,9 @@ export default function CarRental() {
       }
     } catch (error) {
       console.error('Update Error:', error);
-      toast.error('Failed to update results');
+      toast.error(error.message || 'Failed to update results');
     } finally {
       setIsLoading(false);
-    }
-  };
-
-  const fetchLocation = () => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        async (position) => {
-          const { latitude, longitude } = position.coords;
-          try {
-            const response = await fetch(
-              `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json`
-            );
-            const data = await response.json();
-            const address = data.address;
-            let locationText = `${address.village || address.town || address.city}, ${address.county}, ${address.state}`;
-            locationText = locationText.replace("undefined, ", "").replace(", undefined", "");
-
-            setEditedBookingDetails(prev => ({
-              ...prev,
-              pickUpLocation: locationText,
-            }));
-          } catch (error) {
-            console.error("Error fetching address:", error);
-          }
-        },
-        (error) => console.error("Error fetching location:", error),
-        { enableHighAccuracy: true }
-      );
     }
   };
 
@@ -245,24 +226,24 @@ export default function CarRental() {
 
               <div className="space-y-2">
                 <Label>Pickup Location</Label>
-                <div className="flex items-center border border-gray-300 rounded-md">
-                  <Input
-                    type="text"
-                    value={editedBookingDetails.pickUpLocation}
-                    onChange={(e) => setEditedBookingDetails(prev => ({
-                      ...prev,
-                      pickUpLocation: e.target.value
-                    }))}
-                    className="border-none focus:ring-0"
-                    placeholder="Enter pickup location"
-                  />
-                  <div 
-                    className="px-3 cursor-pointer"
-                    onClick={fetchLocation}
-                  >
-                    <MdOutlineMyLocation className="text-orange-400 w-5 h-5" />
-                  </div>
-                </div>
+                <Select 
+                  value={editedBookingDetails.pickUpLocation}
+                  onValueChange={(value) => setEditedBookingDetails(prev => ({
+                    ...prev,
+                    pickUpLocation: value
+                  }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select city" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-white border border-gray-200">
+                    {cities.map((city) => (
+                      <SelectItem key={city} value={city}>
+                        {city}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
 
               <div className="space-y-2">

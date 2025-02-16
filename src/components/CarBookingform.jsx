@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { taxiAPI } from '@/config/api';
@@ -71,6 +71,10 @@ export default function CarBookingForm() {
         throw new Error('Please fill in all required fields');
       }
 
+      if (pickUpLocation === dropOffLocation) {
+        throw new Error('Pickup and drop-off locations cannot be the same');
+      }
+
       const token = localStorage.getItem('token');
       if (!token) {
         toast.error('Please login to continue');
@@ -114,8 +118,8 @@ export default function CarBookingForm() {
     "Mumbai",
     "Nashik",
     "Kolhapur",
-    "ahmadnagar",
-    "sambhaji nagar",
+    "Ahmadnagar",
+    "Sambhaji Nagar",
   ];
   const travelTypes = ["One Way"];
 
@@ -136,25 +140,27 @@ export default function CarBookingForm() {
               />
             </div>
 
-            <div className="space-y-2 relative">
+            <div className="space-y-2">
               <Label className="text-sm font-semibold text-gray-600">PICK UP LOCATION</Label>
-              <div className="flex items-center border border-gray-300 rounded px-2">
-                <Input
-                  type="text"
-                  value={bookingDetails.pickUpLocation}
-                  onChange={(e) => setBookingDetails({ ...bookingDetails, pickUpLocation: e.target.value })}
-                  className="w-full border-none focus:ring-0"
-                  placeholder="Enter pickup location"
-                />
-                <MdOutlineMyLocation className="text-orange-400 cursor-pointer" onClick={fetchLocation} />
-              </div>
+              <Select onValueChange={(value) => setBookingDetails({ ...bookingDetails, pickUpLocation: value })}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a city" />
+                </SelectTrigger>
+                <SelectContent className="bg-white">
+                  {cities.map((city, index) => (
+                    <SelectItem key={index} value={city} className="capitalize city-item">
+                      {city}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="space-y-2">
               <Label className="text-sm font-semibold text-gray-600">DROP OFF LOCATION</Label>
               <Select onValueChange={(value) => setBookingDetails({ ...bookingDetails, dropOffLocation: value })}>
                 <SelectTrigger>
-                  <div>{bookingDetails.dropOffLocation || "Select a city"}</div>
+                  <SelectValue placeholder="Select a city" />
                 </SelectTrigger>
                 <SelectContent className="bg-white">
                   {cities
@@ -172,7 +178,7 @@ export default function CarBookingForm() {
               <Label className="text-sm font-semibold text-gray-600">TRAVEL TYPE</Label>
               <Select onValueChange={(value) => setBookingDetails({ ...bookingDetails, travelType: value })}>
                 <SelectTrigger>
-                  <div>{bookingDetails.travelType || "Select Travel Type"}</div>
+                  <SelectValue placeholder="Select Travel Type" />
                 </SelectTrigger>
                 <SelectContent className="bg-white">
                   {travelTypes.map((type, index) => (
