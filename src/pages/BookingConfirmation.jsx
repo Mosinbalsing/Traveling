@@ -8,21 +8,20 @@ import AOS from "aos";
 import "aos/dist/aos.css";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
-export default function BookingConfirmation({ userData }) {
+export default function BookingConfirmation() {
+  const [userData, setUserData] = useState(null);
   const location = useLocation();
   const navigate = useNavigate();
   const { carDetails } = location.state || {};
   const [loadingConfirmation, setLoadingConfirmation] = useState(false);
-  const [userInfo, setUserInfo] = useState({
-    city: userData.user.city ,
-    address: userData.user.address ,
-    zip: userData.user.zip 
-  });
-  const [pickupTime, setPickupTime] = useState(carDetails.data.pickupTime || "09:00");
+  const [pickupTime, setPickupTime] = useState(carDetails?.data?.pickupTime || "09:00");
   const [isOtpDialogOpen, setIsOtpDialogOpen] = useState(false);
   const [otp, setOtp] = useState("");
   const [isVerifying, setIsVerifying] = useState(false);
   const [validationErrors, setValidationErrors] = useState({});
+  const [pickupAddress, setPickupAddress] = useState("");
+  const [pickupPincode, setPickupPincode] = useState("");
+  const [pickupCity, setPickupCity] = useState("");
 
   useEffect(() => {
     AOS.init({
@@ -31,86 +30,67 @@ export default function BookingConfirmation({ userData }) {
     });
   }, []);
 
-  if (!carDetails) {
-    return <p>No car details available</p>;
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) {
+          navigate('/login');
+          return;
+        }
+        const response = await axios.get('https://noble-liberation-production.up.railway.app/api/auth/getuserdata', {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        setUserData(response.data);
+      } catch (error) {
+        console.error('Error fetching user data:', error);
+        toast.error('Failed to fetch user data');
+        navigate('/login');
+      }
+    };
+
+    fetchUserData();
+  }, [navigate]);
+
+  if (!carDetails || !userData) {
+    return <div className="flex justify-center items-center min-h-screen">Loading...</div>;
   }
 
-  // Function to validate the form fields
   const validateForm = () => {
     const errors = {};
 
-    // User Details Validation
-    if (!userData?.user?.username) {
-      errors.username = "Username is required";
-    }
-    if (!userData?.user?.mobile) {
-      errors.mobile = "Mobile number is required";
-    }
-    if (!userData?.user?.email) {
-      errors.email = "Email is required";
-    }
-
-    // Travel Details Validation
-    if (!carDetails?.data?.pickUpLocation) {
-      errors.pickUpLocation = "Pickup location is required";
-    }
-    if (!carDetails?.data?.dropOffLocation) {
-      errors.dropOffLocation = "Drop location is required";
-    }
-    if (!carDetails?.data?.travelType) {
-      errors.travelType = "Travel type is required";
-    }
-    if (!carDetails?.data?.departureDate) {
-      errors.departureDate = "Travel date is required";
-    }
-    if (!carDetails?.data?.peopleCount) {
-      errors.peopleCount = "Number of passengers is required";
-    }
-    if (!pickupTime) {
-      errors.pickupTime = "Pickup time is required";
-    }
+    if (!userData?.user?.username) errors.username = "Username is required";
+    if (!userData?.user?.mobile) errors.mobile = "Mobile number is required";
+    if (!userData?.user?.email) errors.email = "Email is required";
+    if (!pickupAddress) errors.pickupAddress = "Pickup address is required";
+    if (!pickupPincode) errors.pickupPincode = "Pincode is required";
+    if (!pickupCity) errors.pickupCity = "City is required";
+    if (!carDetails?.data?.pickUpLocation) errors.pickUpLocation = "Pickup location is required";
+    if (!carDetails?.data?.dropOffLocation) errors.dropOffLocation = "Drop location is required";
+    if (!carDetails?.data?.travelType) errors.travelType = "Travel type is required";
+    if (!carDetails?.data?.departureDate) errors.departureDate = "Travel date is required";
+    if (!carDetails?.data?.peopleCount) errors.peopleCount = "Number of passengers is required";
+    if (!pickupTime) errors.pickupTime = "Pickup time is required";
 
     return errors;
   };
 
-  // Returns true if there are no validation errors.
-  const isFormValid = () => {
-    const errors = validateForm();
-    return Object.keys(errors).length === 0;
-  };
-
-  // Confirm Booking only if the form is valid.
   const handleConfirmBooking = async () => {
-    // Run validation for fields from carDetails/userData
     const errors = validateForm();
     setValidationErrors(errors);
-  
-    // Collect missing fields from the errors object (which are keys for carDetails/userData)
-    const missingFieldsFromValidation = Object.keys(errors);
-  
-    // Collect missing userInfo fields separately
-    const missingUserInfoFields = [];
-    if (!userInfo.address) missingUserInfoFields.push("Address");
-    if (!userInfo.city) missingUserInfoFields.push("City");
-    
-    if (!userInfo.zip) missingUserInfoFields.push("ZIP");
-  
-    // Combine both sets of missing fields
-    const missingFields = [...missingFieldsFromValidation, ...missingUserInfoFields];
-  
-    // If any required field is missing, display which ones and return early
-    if (missingFields.length > 0) {
-      toast.error(`Please fill the following fields: ${missingFields.join(", ")}`);
+
+    if (Object.keys(errors).length > 0) {
+      toast.error('Please fill all required fields');
       return;
     }
-  
+
     try {
       setLoadingConfirmation(true);
-      const sendOtpResponse = await axios.post("https://noble-liberation-production.up.railway.app/api/auth/send-otp", {
+      const sendOtpResponse = await axios.post('https://noble-liberation-production.up.railway.app/api/auth/send-otp', {
         phoneNumber: userData.user.mobile,
         userName: userData.user.username
       });
-  
+
       if (sendOtpResponse.data.success) {
         toast.success("OTP sent successfully!");
         setIsOtpDialogOpen(true);
@@ -118,21 +98,14 @@ export default function BookingConfirmation({ userData }) {
         throw new Error(sendOtpResponse.data.message);
       }
     } catch (error) {
-      console.error("OTP Error:", error);
-      toast.error(error.response?.data?.message || "Failed to send OTP");
+      console.error('OTP Error:', error);
+      toast.error(error.response?.data?.message || 'Failed to send OTP');
     } finally {
       setLoadingConfirmation(false);
     }
   };
-  const handleVerifyOtp = async () => {
-    const errors = validateForm();
-    if (Object.keys(errors).length > 0) {
-      setValidationErrors(errors);
-      toast.error('Please fill all required fields');
-      setIsOtpDialogOpen(false);
-      return;
-    }
 
+  const handleVerifyOtp = async () => {
     setIsVerifying(true);
     try {
       // First verify OTP
@@ -141,28 +114,21 @@ export default function BookingConfirmation({ userData }) {
         otp: otp
       });
 
-      if (verifyResponse.data.success) {
-        // If OTP is verified, proceed with booking confirmation
-        const bookingResponse = await axios.post('http://localhost:3000/api/auth/confirm-booking', {
-          carDetails,
-          pickupLocation: carDetails.data.pickUpLocation,
-          dropLocation: carDetails.data.dropOffLocation,
-          travelType: carDetails.data.travelType,
-          travelDate: carDetails.data.departureDate,
-          pickupTime: pickupTime,
-          otp: otp
-        });
-
-        if (bookingResponse.data.success) {
-          toast.success("Booking confirmed!");
-          setIsOtpDialogOpen(false);
-          navigate('/booking-success');
-        } else {
-          throw new Error(bookingResponse.data.message);
-        }
-      } else {
-        throw new Error(verifyResponse.data.message);
+      if (!verifyResponse.data.success) {
+        throw new Error(verifyResponse.data.message || 'OTP verification failed');
       }
+
+      toast.success("OTP verified successfully!");
+      setIsOtpDialogOpen(false);
+      navigate('/booking-success', { 
+        state: { 
+          bookingDetails: {
+            ...carDetails,
+            pickupTime,
+            userData: userData.user
+          }
+        }
+      });
     } catch (error) {
       console.error('Verification Error:', error);
       toast.error(error.response?.data?.message || 'Invalid OTP');
@@ -171,16 +137,13 @@ export default function BookingConfirmation({ userData }) {
     }
   };
 
-  const handleUserInfoChange = (e) => {
-    const { name, value } = e.target;
-    setUserInfo((prev) => ({
-      ...prev,
-      [name]: value
-    }));
-  };
-
-  const handleTimeChange = (e) => {
-    setPickupTime(e.target.value);
+  const formatTimeWithAMPM = (time) => {
+    if (!time) return '';
+    const [hours, minutes] = time.split(':');
+    const hour = parseInt(hours);
+    const ampm = hour >= 12 ? 'PM' : 'AM';
+    const formattedHour = hour % 12 || 12;
+    return `${formattedHour}:${minutes} ${ampm}`;
   };
 
   return (
@@ -283,7 +246,7 @@ export default function BookingConfirmation({ userData }) {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 lg:gap-4">
                   <div className="bg-gray-50 p-3 lg:p-4 rounded-lg" data-aos="zoom-in" data-aos-delay="100">
                     <h3 className="font-semibold text-sm lg:text-base">Name</h3>
-                    <p className="text-sm lg:text-base">{userData.user.name}</p>
+                    <p className="text-sm lg:text-base">{userData.user.username}</p>
                     {validationErrors.username && <p className="text-sm text-red-500 mt-1">{validationErrors.username}</p>}
                   </div>
                   <div className="bg-gray-50 p-3 lg:p-4 rounded-lg" data-aos="zoom-in" data-aos-delay="200">
@@ -298,49 +261,54 @@ export default function BookingConfirmation({ userData }) {
                   </div>
                   <div className="bg-gray-50 p-3 lg:p-4 rounded-lg" data-aos="zoom-in" data-aos-delay="400">
                     <h3 className="font-semibold text-sm lg:text-base mb-2">Pickup Time</h3>
-                    <Input
-                      type="time"
-                      value={pickupTime}
-                      onChange={handleTimeChange}
-                      className={`border-0 focus:ring-0 bg-transparent p-0 text-sm lg:text-base ${
-                        validationErrors.pickupTime ? "border-red-500" : ""
-                      }`}
-                    />
+                    <div className="flex items-center gap-2">
+                      <Input
+                        type="time"
+                        value={pickupTime}
+                        onChange={(e) => setPickupTime(e.target.value)}
+                        className={`border-0 focus:ring-0 bg-transparent p-0 text-sm lg:text-base ${
+                          validationErrors.pickupTime ? "border-red-500" : ""
+                        }`}
+                      />
+                      <span className="text-sm text-gray-600">
+                        {formatTimeWithAMPM(pickupTime)}
+                      </span>
+                    </div>
                     {validationErrors.pickupTime && <p className="text-sm text-red-500 mt-1">{validationErrors.pickupTime}</p>}
                   </div>
-                </div>
-
-                <div className="bg-gray-50 p-4 rounded-lg" data-aos="zoom-in" data-aos-delay="500">
-                  <h3 className="font-semibold">Address</h3>
-                  <Input
-                    name="address"
-                    value={userInfo.address}
-                    onChange={handleUserInfoChange}
-                    className="mt-1 border-0 focus:ring-0 bg-transparent placeholder:text-gray-400"
-                    placeholder="Enter Pickup address"
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="bg-gray-50 p-4 rounded-lg" data-aos="zoom-in" data-aos-delay="600">
-                    <h3 className="font-semibold">City</h3>
+                  <div className="bg-gray-50 p-3 lg:p-4 rounded-lg col-span-2" data-aos="zoom-in" data-aos-delay="500">
+                    <h3 className="font-semibold text-sm lg:text-base mb-2">Pickup Address</h3>
                     <Input
-                      name="city"
-                      value={userInfo.city}
-                      onChange={handleUserInfoChange}
-                      className="mt-1 border-0 focus:ring-0 bg-transparent placeholder:text-gray-400"
-                      placeholder="Enter City"
+                      type="text"
+                      placeholder="Enter pickup address"
+                      value={pickupAddress}
+                      onChange={(e) => setPickupAddress(e.target.value)}
+                      className={validationErrors.pickupAddress ? "border-red-500" : ""}
                     />
+                    {validationErrors.pickupAddress && <p className="text-sm text-red-500 mt-1">{validationErrors.pickupAddress}</p>}
                   </div>
-                  <div className="bg-gray-50 p-4 rounded-lg" data-aos="zoom-in" data-aos-delay="700">
-                    <h3 className="font-semibold">ZIP</h3>
+                  <div className="bg-gray-50 p-3 lg:p-4 rounded-lg" data-aos="zoom-in" data-aos-delay="600">
+                    <h3 className="font-semibold text-sm lg:text-base mb-2">City</h3>
                     <Input
-                      name="zip"
-                      value={userInfo.zip}
-                      onChange={handleUserInfoChange}
-                      className="mt-1 border-0 focus:ring-0 bg-transparent placeholder:text-gray-400"
-                      placeholder="Enter ZIP code"
+                      type="text"
+                      placeholder="Enter city"
+                      value={pickupCity}
+                      onChange={(e) => setPickupCity(e.target.value)}
+                      className={validationErrors.pickupCity ? "border-red-500" : ""}
                     />
+                    {validationErrors.pickupCity && <p className="text-sm text-red-500 mt-1">{validationErrors.pickupCity}</p>}
+                  </div>
+                  <div className="bg-gray-50 p-3 lg:p-4 rounded-lg" data-aos="zoom-in" data-aos-delay="700">
+                    <h3 className="font-semibold text-sm lg:text-base mb-2">Pincode</h3>
+                    <Input
+                      type="text"
+                      placeholder="Enter pincode"
+                      value={pickupPincode}
+                      onChange={(e) => setPickupPincode(e.target.value)}
+                      maxLength={6}
+                      className={validationErrors.pickupPincode ? "border-red-500" : ""}
+                    />
+                    {validationErrors.pickupPincode && <p className="text-sm text-red-500 mt-1">{validationErrors.pickupPincode}</p>}
                   </div>
                 </div>
 
