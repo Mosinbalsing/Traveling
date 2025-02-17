@@ -283,7 +283,7 @@ export default function BookingConfirmation() {
                       placeholder="Enter pickup address"
                       value={pickupAddress}
                       onChange={(e) => setPickupAddress(e.target.value)}
-                      className={validationErrors.pickupAddress ? "border-red-500" : ""}
+                      className={validationErrors.pickupAddress ? "border-0 focus:ring-0" : "border-0 focus:ring-0"}
                     />
                     {validationErrors.pickupAddress && <p className="text-sm text-red-500 mt-1">{validationErrors.pickupAddress}</p>}
                   </div>
@@ -294,9 +294,9 @@ export default function BookingConfirmation() {
                       placeholder="Enter city"
                       value={pickupCity}
                       onChange={(e) => setPickupCity(e.target.value)}
-                      className={validationErrors.pickupCity ? "border-red-500" : ""}
+                      className={validationErrors.pickupCity ? "border-0 focus:ring-0" : "border-0 focus:ring-0"}
                     />
-                    {validationErrors.pickupCity && <p className="text-sm text-red-500 mt-1">{validationErrors.pickupCity}</p>}
+                    {validationErrors.pickupCity && <p className="text-sm text-red-500 mt-1 border-0 focus:ring-0">{validationErrors.pickupCity}</p>}
                   </div>
                   <div className="bg-gray-50 p-3 lg:p-4 rounded-lg" data-aos="zoom-in" data-aos-delay="700">
                     <h3 className="font-semibold text-sm lg:text-base mb-2">Pincode</h3>
@@ -306,7 +306,7 @@ export default function BookingConfirmation() {
                       value={pickupPincode}
                       onChange={(e) => setPickupPincode(e.target.value)}
                       maxLength={6}
-                      className={validationErrors.pickupPincode ? "border-red-500" : ""}
+                      className={validationErrors.pickupPincode ? "border-0 focus:ring-0" : "border-0 focus:ring-0"}
                     />
                     {validationErrors.pickupPincode && <p className="text-sm text-red-500 mt-1">{validationErrors.pickupPincode}</p>}
                   </div>
