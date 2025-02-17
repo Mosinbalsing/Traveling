@@ -106,7 +106,7 @@ export default function BookingConfirmation({ userData }) {
   
     try {
       setLoadingConfirmation(true);
-      const sendOtpResponse = await axios.post("http://localhost:3000/api/auth/send-otp", {
+      const sendOtpResponse = await axios.post("https://noble-liberation-production.up.railway.app/api/auth/send-otp", {
         phoneNumber: userData.user.mobile,
         userName: userData.user.username
       });
@@ -136,7 +136,7 @@ export default function BookingConfirmation({ userData }) {
     setIsVerifying(true);
     try {
       // First verify OTP
-      const verifyResponse = await axios.post('http://localhost:3000/api/auth/verify-otp', {
+      const verifyResponse = await axios.post('https://noble-liberation-production.up.railway.app/api/auth/verify-otp', {
         phoneNumber: userData.user.mobile,
         otp: otp
       });
