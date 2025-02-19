@@ -90,7 +90,7 @@ export default function BookingConfirmation() {
     try {
       setLoadingConfirmation(true);
       // First send OTP
-      const sendOtpResponse = await axios.post('https://noble-liberation-production.up.railway.app/api/auth/send-otp', {
+      const sendOtpResponse = await axios.post(`${BASE_URL}/api/auth/send-otp`, {
         phoneNumber: userData.user.mobile,
         userName: userData.user.username
       });
@@ -113,7 +113,7 @@ export default function BookingConfirmation() {
     setIsVerifying(true);
     try {
       // First verify OTP
-      const verifyResponse = await axios.post('https://noble-liberation-production.up.railway.app/api/auth/verify-otp', {
+      const verifyResponse = await axios.post(`${BASE_URL}/api/auth/verify-otp`, {
         phoneNumber: userData.user.mobile,
         otp: otp
       });
@@ -140,7 +140,7 @@ export default function BookingConfirmation() {
         price: carDetails.price
       };
 
-      const bookingResponse = await axios.post('https://noble-liberation-production.up.railway.app/api/auth/create', bookingData);
+      const bookingResponse = await axios.post(`${BASE_URL}/api/auth/create`, bookingData);
 
       if (bookingResponse.data.success) {
         toast.success("Booking confirmed!");
