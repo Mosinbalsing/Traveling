@@ -8,8 +8,6 @@ import AOS from "aos";
 import "aos/dist/aos.css";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import loder from "@/assets/loaders/preloader.gif";
-import { bookingAPI } from '@/config/api';
-
 export default function BookingConfirmation() {
   const [userData, setUserData] = useState(null);
   const location = useLocation();
@@ -40,7 +38,7 @@ export default function BookingConfirmation() {
           navigate('/login');
           return;
         }
-        const response = await axios.get('http://localhost:3000/api/auth/getuserdata', {
+        const response = await axios.get('https://noble-liberation-production.up.railway.app/api/auth/getuserdata', {
           headers: { Authorization: `Bearer ${token}` }
         });
         setUserData(response.data);
@@ -88,17 +86,17 @@ export default function BookingConfirmation() {
 
     try {
       setLoadingConfirmation(true);
-      // Using the API function for sending OTP
-      const sendOtpResponse = await bookingAPI.sendOTP({
+      // First send OTP
+      const sendOtpResponse = await axios.post('https://noble-liberation-production.up.railway.app/api/auth/send-otp', {
         phoneNumber: userData.user.mobile,
         userName: userData.user.username
       });
 
-      if (sendOtpResponse.success) {
+      if (sendOtpResponse.data.success) {
         toast.success("OTP sent successfully!");
         setIsOtpDialogOpen(true);
       } else {
-        throw new Error(sendOtpResponse.message);
+        throw new Error(sendOtpResponse.data.message);
       }
     } catch (error) {
       console.error('OTP Error:', error);
@@ -111,17 +109,17 @@ export default function BookingConfirmation() {
   const handleVerifyOtp = async () => {
     setIsVerifying(true);
     try {
-      // Using the API function for verifying OTP
-      const verifyResponse = await bookingAPI.verifyOTP({
+      // First verify OTP
+      const verifyResponse = await axios.post('https://noble-liberation-production.up.railway.app/api/auth/verify-otp', {
         phoneNumber: userData.user.mobile,
         otp: otp
       });
 
-      if (!verifyResponse.success) {
-        throw new Error(verifyResponse.message || 'OTP verification failed');
+      if (!verifyResponse.data.success) {
+        throw new Error(verifyResponse.data.message || 'OTP verification failed');
       }
 
-      // If OTP is verified, create booking using the API function
+      // If OTP is verified, create booking
       const bookingData = {
         userId: userData.user._id || userData.user.id,
         TaxiID: carDetails._id || 1,
@@ -139,14 +137,14 @@ export default function BookingConfirmation() {
         price: carDetails.price
       };
 
-      const bookingResponse = await bookingAPI.createBooking(bookingData);
+      const bookingResponse = await axios.post('https://noble-liberation-production.up.railway.app/api/auth/create', bookingData);
 
-      if (bookingResponse.success) {
+      if (bookingResponse.data.success) {
         toast.success("Booking confirmed!");
         const bookingDetails = {
           ...bookingData,
-          _id: bookingResponse._id || 'BOOKING-' + new Date().getTime(),
-          createdAt: bookingResponse.createdAt || new Date().toISOString()
+          _id: bookingResponse.data._id || 'BOOKING-' + new Date().getTime(),
+          createdAt: bookingResponse.data.createdAt || new Date().toISOString()
         };
 
         setIsOtpDialogOpen(false);
@@ -158,7 +156,7 @@ export default function BookingConfirmation() {
           });
         }, 1000);
       } else {
-        throw new Error(bookingResponse.message || 'Booking failed');
+        throw new Error(bookingResponse.data.message || 'Booking failed');
       }
     } catch (error) {
       console.error('Verification Error:', error);
