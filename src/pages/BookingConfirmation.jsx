@@ -8,7 +8,10 @@ import AOS from "aos";
 import "aos/dist/aos.css";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import loder from "@/assets/loaders/preloader.gif";
+import { BASE_URL } from '@/config/api';
+
 export default function BookingConfirmation() {
+
   const [userData, setUserData] = useState(null);
   const location = useLocation();
   const navigate = useNavigate();
@@ -38,7 +41,7 @@ export default function BookingConfirmation() {
           navigate('/login');
           return;
         }
-        const response = await axios.get('https://noble-liberation-production.up.railway.app/api/auth/getuserdata', {
+        const response = await axios.get(`${BASE_URL}/api/auth/getuserdata`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         setUserData(response.data);

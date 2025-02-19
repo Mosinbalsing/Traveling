@@ -1,10 +1,9 @@
 import axios from 'axios';
 
-
 // const BASE_URL = 'http://localhost:3000/api';
 
 // Use the correct Railway URL
-const BASE_URL = 'https://noble-liberation-production.up.railway.app';
+export const BASE_URL = 'https://noble-liberation-production.up.railway.app';
 
 // Create a simple axios instance 
 const api = axios.create({
@@ -86,23 +85,10 @@ const authAPI = {
   },
 
   getUserData: async (token) => {
-    try {
-      const response = await axios({
-        method: 'GET',
-        url: `${BASE_URL}${API_ENDPOINTS.GET_USER_DATA}`,
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        withCredentials: true
-      });
-      console.log("getUserData API response:", response.data);
-      return response.data;
-    } catch (error) {
-      console.error('Get User Data Error:', error);
-      throw error;
-    }
+    const response = await axios.get(`${BASE_URL}/api/auth/getuserdata`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    return response.data;
   }
 };
 
@@ -119,17 +105,17 @@ const taxiAPI = {
 
 export const bookingAPI = {
   sendOTP: async (data) => {
-    const response = await axios.post(`${BASE_URL}/auth/send-otp`, data);
+    const response = await axios.post(`${BASE_URL}/api/auth/send-otp`, data);
     return response.data;
   },
 
   verifyOTP: async (data) => {
-    const response = await axios.post(`${BASE_URL}/auth/verify-otp`, data);
+    const response = await axios.post(`${BASE_URL}/api/auth/verify-otp`, data);
     return response.data;
   },
 
   createBooking: async (data) => {
-    const response = await axios.post(`${BASE_URL}/auth/create`, data);
+    const response = await axios.post(`${BASE_URL}/api/auth/create`, data);
     return response.data;
   }
 };
