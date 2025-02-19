@@ -5,7 +5,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { authAPI } from '@/config/api';
-
+import loder from "@/assets/loaders/preloader.gif";
 const UserProfile = () => {
     const navigate = useNavigate();
     const [userData, setUserData] = useState(null);
@@ -31,7 +31,7 @@ const UserProfile = () => {
     }, []);
 
     if (!userData) {
-        return <p>Loading user data...</p>;
+        return <div className="fixed inset-0 flex items-center justify-center bg-white z-50"><img src={loder} alt="Loading..." /></div>;
     }
 
     const { user } = userData;

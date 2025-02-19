@@ -6,7 +6,7 @@ import AOS from "aos";
 import "aos/dist/aos.css";
 import { FaArrowUp, FaWhatsapp } from "react-icons/fa";
 import Navbar from "@/components/Navbar";
-import loder from "./assets/loaders/preloader.gif";
+import loder from "@/assets/loaders/preloader.gif";
 import { authAPI } from "@/config/api";
 
 import BookingConfirmation from "@/pages/BookingConfirmation";
@@ -21,6 +21,7 @@ const Cars = lazy(() => import("@/pages/Cars"));
 const CarRental = lazy(() => import("./pages/carCategories"));
 const Contact = lazy(() => import("@/pages/Contact "));
 const SlidingAuthForm = lazy(() => import("./components/LogInSigUp"));
+const BookingSuccess = lazy(() => import("@/pages/BookingSuccess"));
 
 function ScrollToTop() {
   const { pathname } = useLocation();
@@ -91,7 +92,7 @@ function App() {
 
   return (
     <div>
-      {location.pathname !== "/log" && (
+      {location.pathname !== "/log" && location.pathname !== "/booking-success" && (
         <>
           <Navbar />
           <ScrollToTop />
@@ -115,6 +116,7 @@ function App() {
           <Route path="/log" element={<SlidingAuthForm />} />
           <Route path="/profile" element={<UserProfile userData={userData} />} />
           <Route path="/booking-confirmation" element={<BookingConfirmation userData={userData} />} />
+          <Route path="/booking-success" element={<BookingSuccess />} />
         </Routes>
       </Suspense>
 

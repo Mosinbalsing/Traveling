@@ -1,12 +1,12 @@
 import axios from 'axios';
 
 
-// const BASE_URL = 'http://localhost:3000';
+// const BASE_URL = 'http://localhost:3000/api';
 
 // Use the correct Railway URL
 const BASE_URL = 'https://noble-liberation-production.up.railway.app';
 
-// Create a simple axios instance
+// Create a simple axios instance 
 const api = axios.create({
   baseURL: BASE_URL,
   headers: {
@@ -114,6 +114,23 @@ const taxiAPI = {
     } catch (error) {
       throw error;
     }
+  }
+};
+
+export const bookingAPI = {
+  sendOTP: async (data) => {
+    const response = await axios.post(`${BASE_URL}/auth/send-otp`, data);
+    return response.data;
+  },
+
+  verifyOTP: async (data) => {
+    const response = await axios.post(`${BASE_URL}/auth/verify-otp`, data);
+    return response.data;
+  },
+
+  createBooking: async (data) => {
+    const response = await axios.post(`${BASE_URL}/auth/create`, data);
+    return response.data;
   }
 };
 
