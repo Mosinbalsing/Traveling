@@ -123,8 +123,8 @@ export default function BookingConfirmation() {
 
       // If OTP is verified, create booking using the API function
       const bookingData = {
-        userId: userData.user._id,
-        TaxiID: carDetails._id,
+        userId: userData.user._id || userData.user.id,
+        TaxiID: carDetails._id || 1,
         bookingDate: new Date().toISOString(),
         PickupLocation: carDetails.data.pickUpLocation,
         pickupAddress: pickupAddress,
