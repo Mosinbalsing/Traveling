@@ -1,11 +1,11 @@
 import axios from 'axios';
 
-// const BASE_URL = 'http://localhost:3000/api';
+//  export  const BASE_URL = 'http://localhost:3000/api';
 
 // Use the correct Railway URL
 export const BASE_URL = 'https://noble-liberation-production.up.railway.app';
 
-// Create a simple axios instance 
+// Create a simple axios instance   
 const api = axios.create({
   baseURL: BASE_URL,
   headers: {

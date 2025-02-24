@@ -1,7 +1,10 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
+@font-face {
+    font-family: 'Futuru';
+    src: url('../public/assets/Fonts/Futuru/TTF/Futuru-Bold.ttf') format('truetype');
+}
 .rotate-title {
     transform: rotate(90deg);
     transform-origin: left top;

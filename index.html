@@ -1,24 +1,48 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Vite + React</title>
-    <style>
-      html{
-        scroll-snap-type: y mandatory;
-      }
-      body {
-        box-sizing: border-box;
-        padding: 0px;
-        margin: 0px;
-      }
+
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Vite + React</title>
+  <style>
+    @font-face {
+      font-family: 'Futuru';
+      src: url('../public/assets/Fonts/Futuru/TTF/Futuru-Bold.ttf') format('truetype');
+      font-weight: bold;
+      font-style: normal;
+    }
+    @font-face {
+      font-family: 'Futuru2';
+      src: url('./public/assets/Fonts/women/Women\'s\ Jewelry\ Italic.otf') format('truetype');
+      font-weight: bold;
+      font-style: normal;
+    }
+    @font-face {
+      font-family: 'Futuru3';
+      src: url('./public/assets/Fonts/jungle/Jungler\ Traveling.otf') format('truetype');
+      font-weight: bold;
+      font-style: normal;
+    }
+
+    html {
+      scroll-snap-type: y mandatory;
       
-    </style>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
-  </body>
+    }
+
+    body {
+      box-sizing: border-box;
+      padding: 0px;
+      margin: 0px;
+      font-family: 'Futuru3';
+    }
+  </style>
+</head>
+
+<body>
+  <div id="root"></div>
+  <script type="module" src="/src/main.jsx"></script>
+</body>
+
 </html>
