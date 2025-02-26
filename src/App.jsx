@@ -1,12 +1,13 @@
-import { Routes, Route, useLocation } from "react-router-dom";
-import { ToastContainer } from "react-toastify";
+import { Routes, Route, useLocation, useNavigate } from "react-router-dom";
+import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { useState, useEffect, lazy, Suspense } from "react";
 import AOS from "aos";
-import "aos/dist/aos.css"
+import "aos/dist/aos.css";
 import { FaArrowUp, FaWhatsapp } from "react-icons/fa";
 import Navbar from "@/components/Navbar";
 import loder from "@/assets/loaders/preloader.gif";
+import { authAPI } from "@/config/api";
 
 import BookingConfirmation from "@/pages/BookingConfirmation";
 import UserProfile from "@/pages/UserProfile";
@@ -33,8 +34,10 @@ function ScrollToTop() {
 
 function App() {
   const location = useLocation();
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [showButton, setShowButton] = useState(false);
+  const [userData, setUserData] = useState(null);
 
   useEffect(() => {
     AOS.init({ duration: 1000, once: true });
@@ -55,6 +58,30 @@ function App() {
 
     return () => clearTimeout(timer);
   }, [location.pathname]);
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+      const token = localStorage.getItem("token");
+
+      if (!token) {
+        return; // No token, no need to fetch user data
+      }
+
+      try {
+        const data = await authAPI.getUserData(token);
+        if (!data) {
+          throw new Error("User data not found");
+        }
+        setUserData(data);
+      } catch (error) {
+        console.error("Error fetching user data:", error);
+        toast.error("Failed to fetch user data. Redirecting to home.");
+        navigate("/");
+      }
+    };
+
+    fetchUserData();
+  }, [navigate]);
 
   if (loading) {
     return (
@@ -82,8 +109,8 @@ function App() {
           <Route path="/cars" element={<Cars />} />
           <Route path="/contact" element={<Contact />} />
           <Route path="/log" element={<SlidingAuthForm />} />
-          <Route path="/profile" element={<UserProfile />} />
-          <Route path="/booking-confirmation" element={<BookingConfirmation />} />
+          <Route path="/profile" element={<UserProfile userData={userData} />} />
+          <Route path="/booking-confirmation" element={<BookingConfirmation userData={userData} />} />
           <Route path="/booking-success" element={<BookingSuccess />} />
         </Routes>
       </Suspense>
