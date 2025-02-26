@@ -13,7 +13,7 @@ const api = axios.create({
 });
 
 // Add an interceptor to include token in requests
-tapi.interceptors.request.use(
+api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token');
     if (token) {
@@ -41,7 +41,18 @@ const apiRequest = async (method, url, data = {}) => {
     const response = await api({ method, url, data });
     return response.data;
   } catch (error) {
-    console.error(`API Error (${method} ${url}):`, error);
+    console.error(`API Error (${method} ${url}):`, error.response?.data || error.message);
+    throw error.response?.data || error.message || 'An unknown error occurred';
+  }
+};
+
+// Test API request separately in case of failure
+const testAPIRequest = async (method, url, data = {}) => {
+  try {
+    const response = await axios({ method, url: `${BASE_URL}${url}`, data, withCredentials: true });
+    return response.data;
+  } catch (error) {
+    console.error(`Direct API Error (${method} ${url}):`, error.response?.data || error.message);
     throw error.response?.data || error.message || 'An unknown error occurred';
   }
 };
