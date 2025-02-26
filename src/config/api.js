@@ -3,7 +3,7 @@ import axios from 'axios';
 //  export  const BASE_URL = 'http://localhost:3000';
 
 // Use the correct Railway URL
-export const BASE_URL = 'https://noble-liberation-production.up.railway.app';
+// export const BASE_URL = 'https://noble-liberation-production.up.railway.app';
 
 
 

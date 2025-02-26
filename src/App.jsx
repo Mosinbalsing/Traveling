@@ -76,7 +76,7 @@ function App() {
       } catch (error) {
         console.error("Error fetching user data:", error);
         toast.error("Failed to fetch user data. Redirecting to home.");
-        navigate("/");
+        navigate("/log");
       }
     };
 
