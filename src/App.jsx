@@ -59,6 +59,7 @@ function App() {
     return () => clearTimeout(timer);
   }, [location.pathname]);
 
+  // Fetch user data
   useEffect(() => {
     const fetchUserData = async () => {
       const token = localStorage.getItem("token");
