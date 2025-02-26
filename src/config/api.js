@@ -1,23 +1,19 @@
 import axios from 'axios';
 
-//  export  const BASE_URL = 'http://localhost:3000';
-
-// Use the correct Railway URL
 export const BASE_URL = 'https://noble-liberation-production.up.railway.app';
 
-
-
-// Create a simple axios instance   
+// Create an Axios instance with default headers
 const api = axios.create({
   baseURL: BASE_URL,
   headers: {
     'Content-Type': 'application/json',
     'Accept': 'application/json'
-  }
+  },
+  withCredentials: true
 });
 
-// Add a request interceptor to add the token
-api.interceptors.request.use(
+// Add an interceptor to include token in requests
+tapi.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token');
     if (token) {
@@ -25,102 +21,46 @@ api.interceptors.request.use(
     }
     return config;
   },
-  (error) => {
-    return Promise.reject(error);
-  }
+  (error) => Promise.reject(error)
 );
 
-// API endpoints
+// API Endpoints
 export const API_ENDPOINTS = {
   LOGIN: '/api/auth/login',
   SIGNUP: '/api/auth/signup',
   GET_USER_DATA: '/api/auth/getuserdata',
-  SEARCH_TAXIS: '/api/auth/available-taxis'
+  SEARCH_TAXIS: '/api/auth/available-taxis',
+  SEND_OTP: '/api/auth/send-otp',
+  VERIFY_OTP: '/api/auth/verify-otp',
+  CREATE_BOOKING: '/api/auth/create'
 };
 
-// API functions
-const authAPI = {
-  login: async (email, password) => {
-    try {
-      // Use direct axios call for testing
-      const response = await axios({
-        method: 'POST',
-        url: `${BASE_URL}${API_ENDPOINTS.LOGIN}`,
-        data: { email, password },
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        },
-        withCredentials: true
-      });
-      
-      if (response.data) {
-        return response.data;
-      }
-      throw new Error('No response data');
-      
-    } catch (error) {
-      if (error.code === 'ERR_NETWORK') {
-        throw new Error('Network error - Please check your connection');
-      }
-      throw error;
-    }
-  },
-
-  signup: async (userData) => {
-    try {
-      const response = await axios({
-        method: 'POST',
-        url: `${BASE_URL}${API_ENDPOINTS.SIGNUP}`,
-        data: userData,
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        },
-        withCredentials: true
-      });
-      return response.data;
-    } catch (error) {
-      console.error('Signup Error:', error);
-      throw error;
-    }
-  },
-
-  getUserData: async (token) => {
-    const response = await axios.get(`${BASE_URL}/api/auth/getuserdata`, {
-      headers: { Authorization: `Bearer ${token}` }
-    });
+// Generic function for API requests
+const apiRequest = async (method, url, data = {}) => {
+  try {
+    const response = await api({ method, url, data });
     return response.data;
+  } catch (error) {
+    console.error(`API Error (${method} ${url}):`, error);
+    throw error.response?.data || error.message || 'An unknown error occurred';
   }
 };
 
-const taxiAPI = {
-  getAvailableTaxis: async (formData) => {
-    try {
-      const response = await api.post('/api/auth/available-taxis', formData);
-      return response.data;
-    } catch (error) {
-      throw error;
-    }
-  }
+// Auth API
+export const authAPI = {
+  login: (email, password) => apiRequest('POST', API_ENDPOINTS.LOGIN, { email, password }),
+  signup: (userData) => apiRequest('POST', API_ENDPOINTS.SIGNUP, userData),
+  getUserData: () => apiRequest('GET', API_ENDPOINTS.GET_USER_DATA)
 };
 
+// Taxi API
+export const taxiAPI = {
+  getAvailableTaxis: (formData) => apiRequest('POST', API_ENDPOINTS.SEARCH_TAXIS, formData)
+};
+
+// Booking API
 export const bookingAPI = {
-  sendOTP: async (data) => {
-    const response = await axios.post(`${BASE_URL}/api/auth/send-otp`, data);
-    return response.data;
-  },
-
-  verifyOTP: async (data) => {
-    const response = await axios.post(`${BASE_URL}/api/auth/verify-otp`, data);
-    return response.data;
-  },
-
-  createBooking: async (data) => {
-    const response = await axios.post(`${BASE_URL}/api/auth/create`, data);
-    return response.data;
-  }
+  sendOTP: (data) => apiRequest('POST', API_ENDPOINTS.SEND_OTP, data),
+  verifyOTP: (data) => apiRequest('POST', API_ENDPOINTS.VERIFY_OTP, data),
+  createBooking: (data) => apiRequest('POST', API_ENDPOINTS.CREATE_BOOKING, data)
 };
-
-// Single export statement for all APIs
-export { authAPI, taxiAPI }; 
