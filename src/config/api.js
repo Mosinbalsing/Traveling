@@ -38,7 +38,7 @@ export const API_ENDPOINTS = {
   CREATE_BOOKING: '/api/auth/create',
   STORE_USER_DETAILS: '/api/auth/store-user-details', // New endpoint for storing user details
   CREATE_BOOKING_DETAILS: '/api/booking/create-booking',
-  GET_USER_BY_MOBILE: '/api/users/get-by-mobile',
+  
 };
 
 // Generic function for API requests

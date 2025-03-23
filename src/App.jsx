@@ -1,5 +1,5 @@
 import { Routes, Route, useLocation, useNavigate } from "react-router-dom";
-import { ToastContainer, toast } from "react-toastify";
+import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { useState, useEffect, lazy, Suspense } from "react";
 import AOS from "aos";
@@ -7,7 +7,6 @@ import "aos/dist/aos.css";
 import { FaArrowUp, FaWhatsapp } from "react-icons/fa";
 import Navbar from "@/components/Navbar";
 import loder from "@/assets/loaders/preloader.gif";
-import { authAPI } from "@/config/api";
 
 import BookingConfirmation from "@/pages/BookingConfirmation";
 import UserProfile from "@/pages/UserProfile";
@@ -36,10 +35,8 @@ function ScrollToTop() {
 
 function App() {
   const location = useLocation();
-  const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [showButton, setShowButton] = useState(false);
-  const [userData, setUserData] = useState(null);
 
   useEffect(() => {
     AOS.init({ duration: 1000, once: true });
@@ -60,31 +57,6 @@ function App() {
 
     return () => clearTimeout(timer);
   }, [location.pathname]);
-
-  // Fetch user data
-  useEffect(() => {
-    const fetchUserData = async () => {
-      const token = localStorage.getItem("token");
-
-      if (!token) {
-        return; // No token, no need to fetch user data
-      }
-
-      try {
-        const data = await authAPI.getUserData(token);
-        if (!data) {
-          throw new Error("User data not found");
-        }
-        setUserData(data);
-      } catch (error) {
-        console.error("Error fetching user data:", error);
-        toast.error("Failed to fetch user data. Redirecting to home.");
-        navigate("/log");
-      }
-    };
-
-    fetchUserData();
-  }, [navigate]);
 
   if (loading) {
     return (
@@ -116,25 +88,16 @@ function App() {
           <Route path="/cars" element={<Cars />} />
           <Route path="/contact" element={<Contact />} />
           <Route path="/log" element={<SlidingAuthForm />} />
-          <Route path="/profile" element={<UserProfile userData={userData} />} />
-          <Route path="/booking-confirmation" element={<BookingConfirmation userData={userData} />} />
-          <Route 
-            path="/booking-success" 
-            element={
-              <Suspense fallback={<div>Loading...</div>}>
-                <BookingSuccess />
-              </Suspense>
-            } 
-          />
+          <Route path="/profile" element={<UserProfile />} />
+          <Route path="/booking-confirmation" element={<BookingConfirmation />} />
+          <Route path="/booking-success" element={<BookingSuccess />} />
           <Route path="/admin/login" element={<AdminLogin />} />
           <Route 
             path="/admin/dashboard" 
             element={
-              <Suspense fallback={<div>Loading...</div>}>
-                <ProtectedAdminRoute>
-                  <AdminDashboard />
-                </ProtectedAdminRoute>
-              </Suspense>
+              <ProtectedAdminRoute>
+                <AdminDashboard />
+              </ProtectedAdminRoute>
             } 
           />
         </Routes>
@@ -181,9 +144,8 @@ function App() {
   );
 }
 
-// Add a Protected Route component for admin routes
+// Protected Route component for admin routes
 const ProtectedAdminRoute = ({ children }) => {
-  const navigate = useNavigate();
   const [isAuthorized, setIsAuthorized] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -193,16 +155,12 @@ const ProtectedAdminRoute = ({ children }) => {
         const isAuthenticated = localStorage.getItem("isAdminAuthenticated") === "true";
         const isLoggedIn = localStorage.getItem("adminLoggedIn") === "true";
 
-        console.log("Auth Check:", { isAuthenticated, isLoggedIn });
-
         if (!isAuthenticated || !isLoggedIn) {
           throw new Error("Not authenticated");
         }
 
         setIsAuthorized(true);
       } catch (error) {
-        console.error("Auth check failed:", error);
-        // Use window.location for hard redirect
         window.location.href = "/admin/login";
         return;
       } finally {
@@ -211,7 +169,7 @@ const ProtectedAdminRoute = ({ children }) => {
     };
 
     checkAuth();
-  }, [navigate]);
+  }, []);
 
   if (isLoading) {
     return (
