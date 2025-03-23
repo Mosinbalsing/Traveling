@@ -8,7 +8,7 @@ import { LiaGoogle } from "react-icons/lia";
 import { FiPhone } from "react-icons/fi";
 import { MdOutlineMailOutline } from "react-icons/md";
 import { FaBars, FaTimes } from "react-icons/fa";
-import logo from "../assets/images/logo.png";
+import logo from "@/assets/images/logo.png";
 
 const Navbar = () => {
   const [isFixed, setIsFixed] = useState(false);

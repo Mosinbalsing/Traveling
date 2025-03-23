@@ -69,12 +69,12 @@ export default function BookingSuccess() {
     const logoWidth = 50; // Adjust size as needed
     const logoHeight = 20; // Adjust size as needed
     // Add logo image - positioned at top left
-    doc.addImage(logo, 'PNG', 20, 10, logoWidth, logoHeight);
+    doc.addImage(logo, 'PNG', 80, 10, logoWidth, logoHeight);
     
     // Add company header - adjusted position to be next to logo
-    doc.setFontSize(22);
-    doc.setTextColor(0, 100, 0); // Dark green color
-    doc.text('Shree Tours and Travel', 105, 25, { align: 'center' });
+    // doc.setFontSize(22);
+    // doc.setTextColor(0, 100, 0); // Dark green color
+    // doc.text('Shree Tours and Travel', 250, 25, { align: 'right' });
     
     // Add booking confirmation
     doc.setFontSize(16);
