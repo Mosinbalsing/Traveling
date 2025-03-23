@@ -1,5 +1,5 @@
 const inventory = () => {
-  fetch("http://localhost:3000/api/update-taxi-inventory", {
+  fetch(" ", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",

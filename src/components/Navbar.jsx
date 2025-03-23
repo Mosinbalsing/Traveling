@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useLocation, Link, useNavigate } from "react-router-dom";
+import { useLocation, Link } from "react-router-dom";
 import AOS from "aos";
 import "aos/dist/aos.css";
 import { ImFacebook } from "react-icons/im";
@@ -8,16 +8,12 @@ import { LiaGoogle } from "react-icons/lia";
 import { FiPhone } from "react-icons/fi";
 import { MdOutlineMailOutline } from "react-icons/md";
 import { FaBars, FaTimes } from "react-icons/fa";
-import { Button } from "@/components/ui/button";
 import logo from "../assets/images/logo.png";
 
 const Navbar = () => {
   const [isFixed, setIsFixed] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [username, setUsername] = useState('');
   const location = useLocation();
-  const navigate = useNavigate();
 
   useEffect(() => {
     AOS.init({ duration: 800 });
@@ -36,21 +32,19 @@ const Navbar = () => {
     };
   }, []);
 
-  // Update useEffect to get both token and username
-  useEffect(() => {
-    const token = localStorage.getItem('token');
-    const storedUsername = localStorage.getItem('username');
-    setIsLoggedIn(!!token);
-    if (storedUsername) {
-      setUsername(storedUsername);
-    }
-  }, []);
-
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
   };
 
-
+  // Sidebar Navigation Items
+  const sidebarItems = [
+    { name: "Home", path: "/" },
+    { name: "Booking", path: "/booking" },
+    { name: "Services", path: "/services" },
+    { name: "Cars", path: "/cars" },
+    { name: "Contact", path: "/contact" },
+    { name: "Admin", path: "/admin/login" },
+  ];
 
   return (
     <header className="flex flex-col">
@@ -127,30 +121,11 @@ const Navbar = () => {
                 </Link>
               </li>
             ))}
-            {/* {isLoggedIn ? (
-              <li>
-                <Link
-                  to="/profile"
-                  className="cursor-pointer transition-colors duration-300 text-gray-600 hover:text-[#FF8201]"
-                >
-                  Profile
-                </Link>
-              </li>
-            ) : (
-              <li>
-                <Link
-                  to="/log"
-                  className="cursor-pointer transition-colors duration-300 text-gray-600 hover:text-[#FF8201]"
-                >
-                  Login/Signup
-                </Link>
-              </li>
-            )} */}
           </ul>
         </nav>
       </div>
 
-      {/* Sidebar for Mobile and Tablet */}
+      {/* Updated Sidebar for Mobile and Tablet */}
       <div
         className={`fixed inset-0 bg-black bg-opacity-50 z-20 transition-opacity duration-300 ${
           isSidebarOpen ? "opacity-100" : "opacity-0 pointer-events-none"
@@ -158,19 +133,13 @@ const Navbar = () => {
         onClick={toggleSidebar}
       ></div>
       <div
-        className={`fixed inset-y-0 left-0 w-[70%] md:w-64 bg-white z-30 transform transition-transform duration-300 flex flex-col justify-between ${
+        className={`fixed inset-y-0 left-0 w-[70%] md:w-64 bg-white z-30 transform transition-transform duration-300 flex flex-col ${
           isSidebarOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
         {/* Main menu items */}
         <ul className="flex flex-col gap-6 p-6 font-bold text-gray-600">
-          {[
-            { name: "Home", path: "/" },
-            { name: "Booking", path: "/booking" },
-            { name: "Services", path: "/services" },
-            { name: "Cars", path: "/cars" },
-            { name: "Contact", path: "/contact" },
-          ].map((item) => (
+          {sidebarItems.map((item) => (
             <li key={item.path}>
               <Link
                 to={item.path}
@@ -186,40 +155,6 @@ const Navbar = () => {
             </li>
           ))}
         </ul>
-
-        {/* Profile section at bottom */}
-        <div className="border-t border-gray-200 p-6">
-          {isLoggedIn ? (
-            <Link
-              to="/profile"
-              className="flex items-center space-x-3"
-              onClick={toggleSidebar}
-            >
-              <div className="w-10 h-10 rounded-full bg-orange-500 flex items-center justify-center">
-                <span className="text-white text-lg font-semibold">
-                  {username?.[0]?.toUpperCase() || 'U'}
-                </span>
-              </div>
-              <div className="flex flex-col">
-                <span className="text-gray-800 font-semibold">
-                  {username || 'Profile'}
-                </span>
-                <span className="text-sm text-gray-500">View Profile</span>
-              </div>
-            </Link>
-          ) : (
-            <Link
-              to="/log"
-              className="flex items-center space-x-2 text-gray-600 hover:text-[#FF8201]"
-              onClick={toggleSidebar}
-            >
-              <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center">
-                <span className="text-gray-500 text-lg">?</span>
-              </div>
-              <span className="font-semibold">Login/Signup</span>
-            </Link>
-          )}
-        </div>
       </div>
     </header>
   );

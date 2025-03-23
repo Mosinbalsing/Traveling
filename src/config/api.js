@@ -28,9 +28,8 @@ api.interceptors.request.use(
 
 // API Endpoints
 export const API_ENDPOINTS = {
-  LOGIN: '/api/auth/login',
-  SIGNUP: '/api/auth/signup',
-  GET_USER_DATA: '/api/auth/getuserdata',
+  
+
   SEARCH_TAXIS: '/api/auth/available-taxis',
   SEARCH_MOBILE: '/api/auth/search-mobile',
   SEND_OTP: '/api/auth/send-otp',
@@ -87,9 +86,7 @@ const testAPIRequest = async (method, url, data = {}, headers = {}) => {
 
 // Auth API
 export const authAPI = {
-  login: (email, password) => apiRequest('POST', API_ENDPOINTS.LOGIN, { email, password }),
-  signup: (userData) => apiRequest('POST', API_ENDPOINTS.SIGNUP, userData),
-  getUserData: () => apiRequest('GET', API_ENDPOINTS.GET_USER_DATA),
+  
   storeUserDetails: (mobile, name, email) => {
     const userDetails = { name, email, mobile };
     console.log('Storing user details:', userDetails); // Log the data being sent

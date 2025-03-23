@@ -227,11 +227,27 @@ export default function CarRental() {
         toast.success("OTP verified successfully.");
         setIsMobileDialogOpen(false);
 
+        // Map the vehicle type to match backend expectations
+        const vehicleTypeMap = {
+          'Hatchback': 'Hatchback',
+          'Sedan': 'Sedan',
+          'SUV': 'SUV',
+          'Prime SUV': 'Prime_SUV'
+        };
+
+        const formattedVehicleType = vehicleTypeMap[selectedCar.type];
+        console.log("Original Vehicle Type:", selectedCar.type);
+        console.log("Formatted Vehicle Type:", formattedVehicleType);
+
+        if (!formattedVehicleType) {
+          throw new Error(`Invalid vehicle type: ${selectedCar.type}`);
+        }
+
         // Prepare booking data using existing user data
         const bookingData = {
           bookingDate: new Date().toISOString(),
           travelDate: editedBookingDetails.departureDate,
-          vehicleType: selectedCar.type,
+          vehicleType: formattedVehicleType,
           numberOfPassengers: parseInt(editedBookingDetails.peopleCount),
           pickupLocation: editedBookingDetails.pickUpLocation,
           dropLocation: editedBookingDetails.dropOffLocation,
@@ -263,6 +279,7 @@ export default function CarRental() {
                 numberOfPassengers: bookingData.numberOfPassengers,
                 pickupAddress: bookingData.pickupLocation,
                 pickupCity: bookingData.pickupLocation,
+                price: bookingData.price,
                 userDetails: {
                   name: name,
                   email: email,
@@ -279,11 +296,12 @@ export default function CarRental() {
               replace: true
             });
           } else {
-            throw new Error("Failed to create booking");
+            throw new Error(bookingResponse.message || "Failed to create booking");
           }
         } catch (error) {
           console.error("Booking Creation Error:", error);
-          throw new Error("Failed to create booking");
+          toast.error(error.message || "Failed to create booking");
+          throw error;
         }
       } else {
         throw new Error("Invalid OTP. Please try again.");
