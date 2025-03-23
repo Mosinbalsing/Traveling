@@ -75,12 +75,12 @@ export default function CarBookingForm() {
         throw new Error('Pickup and drop-off locations cannot be the same');
       }
 
-      const token = localStorage.getItem('token');
-      if (!token) {
-        toast.error('Please login to continue');
-        navigate('/log');
-        return;
-      }
+      // const token = localStorage.getItem('token');
+      // if (!token) {
+      //   toast.error('Please login to continue');
+      //   navigate('/log');
+      //   return;
+      // }
 
       const formData = {
         pickUpLocation,

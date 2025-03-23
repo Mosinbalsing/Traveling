@@ -112,7 +112,7 @@ const Navbar = () => {
               { name: "Booking", path: "/booking" },
               { name: "Services", path: "/services" },
               { name: "Cars", path: "/cars" },
-              { name: "Contact", path: "/contact" },
+              { name: "Admin", path: "/admin/login" },
             ].map((item) => (
               <li key={item.path}>
                 <Link
@@ -127,7 +127,7 @@ const Navbar = () => {
                 </Link>
               </li>
             ))}
-            {isLoggedIn ? (
+            {/* {isLoggedIn ? (
               <li>
                 <Link
                   to="/profile"
@@ -145,7 +145,7 @@ const Navbar = () => {
                   Login/Signup
                 </Link>
               </li>
-            )}
+            )} */}
           </ul>
         </nav>
       </div>

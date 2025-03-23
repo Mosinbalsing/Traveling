@@ -1,3 +1,4 @@
+import { useState  } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { MapPin, Users, Calendar } from "lucide-react";
@@ -5,15 +6,12 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import Wagnor from "assets/images/Cars/Wagnor.png";
 import Swift from "assets/images/Cars/Swift.png";
 import Crysta from "assets/images/Cars/crysta.png";
-import Innova from 'assets/images/Cars/Innova.png';
-import { useState } from "react";
+import Innova from "assets/images/Cars/Innova.png";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-
 import { toast } from "react-toastify";
-import { taxiAPI } from "@/config/api";
+import { authAPI, bookingAPI, taxiAPI } from "@/config/api";
 
 const carCategories = [
   {
@@ -79,13 +77,35 @@ const carCategories = [
 ];
 
 export default function CarRental() {
-  const navigate = useNavigate();
   const location = useLocation();
+  const navigate = useNavigate();
   const { bookingDetails, availableTaxis = [] } = location.state || {};
   const [availableTaxisState, setAvailableTaxis] = useState(availableTaxis);
-  const [isEditOpen, setIsEditOpen] = useState(false);
+  const [isMobileDialogOpen, setIsMobileDialogOpen] = useState(false);
+  const [mobile, setMobile] = useState("");
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [otp, setOtp] = useState("");
+  const [isOtpSent, setIsOtpSent] = useState(false);
+  const [isOtpVerificationRequired, setIsOtpVerificationRequired] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [editedBookingDetails, setEditedBookingDetails] = useState(bookingDetails);
+  const [editedBookingDetails, setEditedBookingDetails] = useState(bookingDetails || {});
+  const [isEditOpen, setIsEditOpen] = useState(false);
+  const [error, setError] = useState("");
+  const [isUserDetailsRequired, setIsUserDetailsRequired] = useState(false);
+  const [selectedCar, setSelectedCar] = useState(null);
+
+  const cities = [
+    "Pune",
+    "Shirdi",
+    "Mahabaleshwar",
+    "Lonavala",
+    "Mumbai",
+    "Nashik",
+    "Kolhapur",
+    "Ahmadnagar",
+    "Sambhaji Nagar"
+  ];
 
   if (!bookingDetails) {
     return (
@@ -95,21 +115,217 @@ export default function CarRental() {
     );
   }
 
-  const cities = ["Pune", "Shirdi", "Mahabaleshwar", "Lonavala", "Mumbai", "Nashik", "Kolhapur", "Ahmadnagar", "Sambhajinagar"];
+  const handleMobileSubmit = async () => {
+    setIsLoading(true);
+
+    try {
+      if (!mobile) {
+        throw new Error("Mobile number is required");
+      }
+
+      // Get user details from checkMobileExists
+      const userResponse = await bookingAPI.checkMobileExists(mobile);
+      // Add detailed logging
+      console.log("Complete User Response:", userResponse);
+      console.log("Response Status:", userResponse.success);
+      console.log("Response Data:", userResponse.data);
+
+      if (userResponse.success && userResponse.data) {
+        // Log the user details in a structured way
+        const userData = {
+          name: userResponse.data.name,
+          email: userResponse.data.email,
+          mobile: userResponse.data.mobile,
+          // Add any other fields that come in the response
+        };
+        console.log("Found User Details:", userData);
+
+        // Auto-fill the form with existing user details
+        setName(userData.name);
+        setEmail(userData.email);
+        setIsUserDetailsRequired(false);
+
+        // Log the state updates
+        console.log("Form Auto-filled with:", {
+          name: userData.name,
+          email: userData.email,
+          mobile: userData.mobile
+        });
+      } else {
+        // If user not found, show the form to collect details
+        setIsUserDetailsRequired(true);
+        console.log("No existing user found for mobile:", mobile);
+      }
+
+      // Proceed with OTP sending
+      const otpResponse = await bookingAPI.sendOTP({
+        phoneNumber: mobile,
+        userName: userResponse.data?.name || "user"
+      });
+
+      if (otpResponse.success) {
+        toast.success("OTP sent to your mobile number.");
+        setIsOtpVerificationRequired(true);
+        console.log("OTP sent successfully");
+      } else {
+        throw new Error("Failed to send OTP");
+      }
+    } catch (error) {
+      console.error("Error in handleMobileSubmit:", error);
+      setIsUserDetailsRequired(true);
+      toast.error(error.message || "An error occurred");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  console.log(mobile, name, email, otp);
+  
+  const handleUserDetailsSubmit = async () => {
+    setIsLoading(true);
+    try {
+      // Ensure mobile, name, and email are available
+      if (!mobile || !name || !email) {
+        throw new Error("Mobile, name, and email are required");
+      }
+
+      const response = await authAPI.storeUserDetails({ mobile, name, email });
+      console.log("User  details storage response:", response);
+      
+      if (response.success) {
+        toast.success("User  details stored successfully. OTP sent.");
+        const otpResponse = await bookingAPI.sendOTP({
+          phoneNumber: mobile,
+          userName: name
+        });
+        if (otpResponse.success) {
+          setIsOtpVerificationRequired(true);
+          setIsUserDetailsRequired(false); // Hide name and email fields
+        } else {
+          throw new Error("Failed to send OTP");
+        }
+      } else {
+        throw new Error("Failed to store user details");
+      }
+    } catch (error) {
+      console.error("Error storing user details:", error);
+      toast.error(error.message || "Failed to store user details");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleOtpSubmit = async (e) => {
+    e.preventDefault();
+    setIsLoading(true);
+    const phoneNumber = mobile;
+    try {
+      // Verify OTP
+      const response = await bookingAPI.verifyOTP({ phoneNumber, otp });
+      console.log("OTP Verification Response:", response);
+      
+      if (response.success) {
+        toast.success("OTP verified successfully.");
+        setIsMobileDialogOpen(false);
+
+        // Prepare booking data using existing user data
+        const bookingData = {
+          bookingDate: new Date().toISOString(),
+          travelDate: editedBookingDetails.departureDate,
+          vehicleType: selectedCar.type,
+          numberOfPassengers: parseInt(editedBookingDetails.peopleCount),
+          pickupLocation: editedBookingDetails.pickUpLocation,
+          dropLocation: editedBookingDetails.dropOffLocation,
+          userDetails: {
+            name: name,
+            email: email,
+            mobile: mobile
+          }
+        };
+
+        console.log("Booking Data being sent:", bookingData);
+
+        try {
+          // Create booking
+          const bookingResponse = await bookingAPI.createBookingDetails(bookingData);
+          console.log("Booking Response:", bookingResponse);
+
+          if (bookingResponse.success) {
+            toast.success("Booking created successfully!");
+            
+            // Prepare navigation data using the booking data directly
+            const navigationData = {
+              bookingDetails: {
+                bookingDate: bookingData.bookingDate,
+                travelDate: bookingData.travelDate,
+                PickupLocation: bookingData.pickupLocation,
+                DropLocation: bookingData.dropLocation,
+                vehicleType: bookingData.vehicleType,
+                numberOfPassengers: bookingData.numberOfPassengers,
+                pickupAddress: bookingData.pickupLocation,
+                pickupCity: bookingData.pickupLocation,
+                userDetails: {
+                  name: name,
+                  email: email,
+                  mobile: mobile
+                }
+              }
+            };
+
+            console.log("Navigation Data:", navigationData);
+
+            // Navigate immediately after successful booking
+            navigate("/booking-success", { 
+              state: navigationData,
+              replace: true
+            });
+          } else {
+            throw new Error("Failed to create booking");
+          }
+        } catch (error) {
+          console.error("Booking Creation Error:", error);
+          throw new Error("Failed to create booking");
+        }
+      } else {
+        throw new Error("Invalid OTP. Please try again.");
+      }
+    } catch (error) {
+      console.error("Error in handleOtpSubmit:", error);
+      toast.error(error.message || "Failed to process booking");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleBookNow = (car) => {
+    setSelectedCar(car);
+    setIsMobileDialogOpen(true);
+  };
+
+  const handleEditOpen = () => {
+    setIsEditOpen(true);
+  };
+
+  const handleEditClose = () => {
+    setIsEditOpen(false);
+  };
 
   const handleEditSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
-    setIsEditOpen(false);
+    setError("");
 
     try {
       const { departureDate, pickUpLocation, dropOffLocation, peopleCount, travelType } = editedBookingDetails;
-      if (!departureDate || !pickUpLocation || !dropOffLocation || !peopleCount) {
-        throw new Error('Please fill in all required fields');
-      }
 
       if (pickUpLocation === dropOffLocation) {
-        throw new Error('Pickup and drop-off locations cannot be the same');
+        setError("Pickup and Drop Location cannot be the same.");
+        toast.error("Pickup and Drop Location cannot be the same.");
+        return;
+      }
+
+      if (!departureDate || !pickUpLocation || !dropOffLocation || !peopleCount) {
+        setError("Please fill in all required fields.");
+        return;
       }
 
       const formData = {
@@ -131,21 +347,16 @@ export default function CarRental() {
       toast.error(error.message || 'Failed to update results');
     } finally {
       setIsLoading(false);
+      handleEditClose(); // Close the edit dialog after submission
     }
   };
 
-  const handleBookNow = (car) => {
-    navigate('/booking-confirmation', {
-      state: {
-        carDetails: {
-          carName: car.type,
-          carImage: car.image,
-          carFeatures: car.features,
-          price: car.price,
-          data: editedBookingDetails
-        }
-      }
-    });
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setEditedBookingDetails((prev) => ({
+      ...prev,
+      [name]: value
+    }));
   };
 
   return (
@@ -158,7 +369,7 @@ export default function CarRental() {
           <Button 
             variant="outline" 
             className="w-[48%]"
-            onClick={() => setIsEditOpen(true)}
+            onClick={handleEditOpen} // Open edit dialog
           >
             Edit Details
           </Button>
@@ -196,106 +407,7 @@ export default function CarRental() {
               <span className="text-sm lg:text-base">{editedBookingDetails.departureDate}</span>
             </div>
           </div>
-
-          <div className="space-y-2 w-full lg:w-auto">
-            <h2 className="text-base lg:text-lg font-semibold">Travel Type </h2>
-            <div className="flex items-center gap-2 text-red-600">
-              <MapPin className="h-4 w-4 lg:h-5 lg:w-5" />
-              <span className="text-sm lg:text-base">{editedBookingDetails.travelType}</span>
-            </div>
-          </div>
         </div>
-
-        <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
-          <DialogContent className="sm:max-w-[425px] bg-white">
-            <DialogHeader>
-              <DialogTitle>Edit Booking Details</DialogTitle>
-            </DialogHeader>
-            <form onSubmit={handleEditSubmit} className="space-y-4">
-              <div className="space-y-2">
-                <Label>Departure Date</Label>
-                <Input
-                  type="date"
-                  value={editedBookingDetails.departureDate}
-                  onChange={(e) => setEditedBookingDetails(prev => ({
-                    ...prev,
-                    departureDate: e.target.value
-                  }))}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label>Pickup Location</Label>
-                <Select 
-                  value={editedBookingDetails.pickUpLocation}
-                  onValueChange={(value) => setEditedBookingDetails(prev => ({
-                    ...prev,
-                    pickUpLocation: value
-                  }))}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select city" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-white border border-gray-200">
-                    {cities.map((city) => (
-                      <SelectItem key={city} value={city}>
-                        {city}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <Label>Drop Location</Label>
-                <Select 
-                  value={editedBookingDetails.dropOffLocation}
-                  onValueChange={(value) => setEditedBookingDetails(prev => ({
-                    ...prev,
-                    dropOffLocation: value
-                  }))}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select city" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-white border border-gray-200">
-                    {cities.map((city) => (
-                      <SelectItem key={city} value={city}>
-                        {city}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <Label>Number of Passengers</Label>
-                <Input
-                  type="number"
-                  min="1"
-                  value={editedBookingDetails.peopleCount}
-                  onChange={(e) => setEditedBookingDetails(prev => ({
-                    ...prev,
-                    peopleCount: e.target.value
-                  }))}
-                />
-              </div>
-
-              <div className="flex justify-end gap-2">
-                <Button type="button" variant="outline" onClick={() => setIsEditOpen(false)}>
-                  Cancel
-                </Button>
-                <Button 
-                  type="submit" 
-                  disabled={isLoading}
-                >
-                  {isLoading ? 'Updating...' : 'Save Changes'}
-                </Button>
-              </div>
-            </form>
-          </DialogContent>
-        </Dialog>
-
       </div>
 
       <div className="flex-1 p-4 lg:p-6 overflow-auto lg:ml-80">
@@ -356,27 +468,178 @@ export default function CarRental() {
                       <div className="text-right">
                         <div className="text-sm text-gray-600">Starting from</div>
                         <div className="text-xl lg:text-2xl font-bold">₹{matchedCar.price?.toLocaleString()}</div>
+                        <Button
+                          className="bg-[#76B82A] hover:bg-[#5a8c20] text-sm lg:text-base"
+                          onClick={() => handleBookNow(matchedCar)}
+                        >
+                          Book Now
+                        </Button>
                       </div>
-                      <Button
-                        className="bg-[#76B82A] hover:bg-[#5a8c20] text-sm lg:text-base"
-                        onClick={() => handleBookNow(matchedCar)}
-                      >
-                        Book Now
-                      </Button>
                     </div>
                   </div>
                 </CardContent>
               </Card>
             );
           })}
-
-          {availableTaxisState.length === 0 && (
-            <div className="text-center py-8">
-              <p className="text-gray-600">No taxis available for the selected criteria</p>
-            </div>
-          )}
         </div>
       </div>
+
+      {/* Mobile Dialog */}
+      <Dialog open={isMobileDialogOpen} onOpenChange={setIsMobileDialogOpen}>
+        <DialogContent className="sm:max-w-[425px] bg-white">
+          <DialogHeader>
+            <DialogTitle>Enter Your Mobile Number</DialogTitle>
+          </DialogHeader>
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              if (isUserDetailsRequired) {
+                handleUserDetailsSubmit();
+              } else {
+                isOtpVerificationRequired ? handleOtpSubmit(e) : handleMobileSubmit();
+              }
+            }}
+            className="space-y-4"
+          >
+            {!isOtpVerificationRequired ? (
+              <>
+                <div className="space-y-2">
+                  <Label>Mobile Number</Label>
+                  <Input
+                    type="tel"
+                    value={mobile}
+                    onChange={(e) => setMobile(e.target.value)}
+                    placeholder="Enter your mobile number"
+                    required
+                  />
+                </div>
+
+                {isUserDetailsRequired && (
+                  <div>
+                    <div className="space-y-2">
+                      <Label>Name</Label>
+                      <Input
+                        type="text"
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        placeholder="Enter your name"
+                        required
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label>Email</Label>
+                      <Input
+                        type="email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        placeholder="Enter your email"
+                        required
+                      />
+                    </div>
+                  </div>
+                )}
+              </>
+            ) : (
+              <>
+                <div className="space-y-2">
+                  <Label>Enter OTP</Label>
+                  <Input
+                    type="text"
+                    value={otp}
+                    onChange={(e) => setOtp(e.target.value)}
+                    placeholder="Enter the OTP sent to your mobile"
+                    required
+                  />
+                </div>
+              </>
+            )}
+
+            <div className="flex justify-end gap-2">
+              <Button type="button" variant="outline" onClick={() => setIsMobileDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button type="submit" disabled={isLoading}>
+                {isLoading ? "Sending..." : isOtpVerificationRequired ? "Verify OTP" : isUserDetailsRequired ? "Submit Details" : "Submit"}
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Booking Details Dialog */}
+      <Dialog open={isEditOpen} onOpenChange={handleEditClose}>
+        <DialogContent className="sm:max-w-[425px] bg-white">
+          <DialogHeader>
+            <DialogTitle>Edit Booking Details</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleEditSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <Label>Pickup Location</Label>
+              <Input
+                type="text"
+                name="pickUpLocation"
+                value={editedBookingDetails.pickUpLocation}
+                onChange={handleInputChange}
+                placeholder="Enter pickup location"
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Drop-off Location</Label>
+              <Input
+                type="text"
+                name="dropOffLocation"
+                value={editedBookingDetails.dropOffLocation}
+                onChange={handleInputChange}
+                placeholder="Enter drop-off location"
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Departure Date</Label>
+              <Input
+                type="date"
+                name="departureDate"
+                value={editedBookingDetails.departureDate}
+                onChange={handleInputChange}
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Number of Passengers</Label>
+              <Input
+                type="number"
+                name="peopleCount"
+                value={editedBookingDetails.peopleCount}
+                onChange={handleInputChange}
+                placeholder="Enter number of passengers"
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Travel Type</Label>
+              <Input
+                type="text"
+                name="travelType"
+                value={editedBookingDetails.travelType}
+                onChange={handleInputChange}
+                placeholder="Enter travel type"
+                required
+              />
+            </div>
+            {error && <p className="text-red-500">{error}</p>}
+            <div className="flex justify-end gap-2">
+              <Button type="button" variant="outline" onClick={handleEditClose}>
+                Cancel
+              </Button>
+              <Button type="submit" disabled={isLoading}>
+                {isLoading ? "Updating..." : "Update"}
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

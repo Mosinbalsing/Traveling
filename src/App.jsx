@@ -21,6 +21,8 @@ const CarRental = lazy(() => import("./pages/carCategories"));
 const Contact = lazy(() => import("./pages/Contact "));
 const SlidingAuthForm = lazy(() => import("./components/LogInSigUp"));
 const BookingSuccess = lazy(() => import("@/pages/BookingSuccess"));
+const AdminLogin = lazy(() => import("@/pages/admin/AdminLogin"));
+const AdminDashboard = lazy(() => import("@/pages/admin/AdminDashboard"));
 
 function ScrollToTop() {
   const { pathname } = useLocation();
@@ -94,14 +96,18 @@ function App() {
 
   return (
     <div>
-      {location.pathname !== "/log" && location.pathname !== "/booking-success" && (
+      {location.pathname !== "/log" && 
+       location.pathname !== "/admin/login" && 
+       location.pathname !== "/admin/dashboard" && (
         <>
           <Navbar />
           <ScrollToTop />
         </>
       )}
 
-      <Suspense fallback={<div className="fixed inset-0 flex items-center justify-center bg-white z-50"><img src={loder} alt="Loading..." /></div>}>
+      <Suspense fallback={<div className="fixed inset-0 flex items-center justify-center bg-white z-50">
+        <img src={loder} alt="Loading..." />
+      </div>}>
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/booking" element={<About />} />
@@ -112,7 +118,25 @@ function App() {
           <Route path="/log" element={<SlidingAuthForm />} />
           <Route path="/profile" element={<UserProfile userData={userData} />} />
           <Route path="/booking-confirmation" element={<BookingConfirmation userData={userData} />} />
-          <Route path="/booking-success" element={<BookingSuccess />} />
+          <Route 
+            path="/booking-success" 
+            element={
+              <Suspense fallback={<div>Loading...</div>}>
+                <BookingSuccess />
+              </Suspense>
+            } 
+          />
+          <Route path="/admin/login" element={<AdminLogin />} />
+          <Route 
+            path="/admin/dashboard" 
+            element={
+              <Suspense fallback={<div>Loading...</div>}>
+                <ProtectedAdminRoute>
+                  <AdminDashboard />
+                </ProtectedAdminRoute>
+              </Suspense>
+            } 
+          />
         </Routes>
       </Suspense>
 
@@ -156,5 +180,48 @@ function App() {
     </div>
   );
 }
+
+// Add a Protected Route component for admin routes
+const ProtectedAdminRoute = ({ children }) => {
+  const navigate = useNavigate();
+  const [isAuthorized, setIsAuthorized] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const checkAuth = () => {
+      try {
+        const isAuthenticated = localStorage.getItem("isAdminAuthenticated") === "true";
+        const isLoggedIn = localStorage.getItem("adminLoggedIn") === "true";
+
+        console.log("Auth Check:", { isAuthenticated, isLoggedIn });
+
+        if (!isAuthenticated || !isLoggedIn) {
+          throw new Error("Not authenticated");
+        }
+
+        setIsAuthorized(true);
+      } catch (error) {
+        console.error("Auth check failed:", error);
+        // Use window.location for hard redirect
+        window.location.href = "/admin/login";
+        return;
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    checkAuth();
+  }, [navigate]);
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div>Loading...</div>
+      </div>
+    );
+  }
+
+  return isAuthorized ? children : null;
+};
 
 export default App;
