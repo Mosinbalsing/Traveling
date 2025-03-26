@@ -37,7 +37,10 @@ export const API_ENDPOINTS = {
   CREATE_BOOKING: '/api/auth/create',
   STORE_USER_DETAILS: '/api/auth/store-user-details', // New endpoint for storing user details
   CREATE_BOOKING_DETAILS: '/api/bookings/create-booking',
+<<<<<<< HEAD
   SEARCH_BOOKINGS: '/api/bookings/search',
+=======
+>>>>>>> d796d87062c7707732b74212a2715161de557c35
   
 };
 
