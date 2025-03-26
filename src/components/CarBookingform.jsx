@@ -8,8 +8,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { taxiAPI } from '@/config/api';
-
-
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { cn } from "@/lib/utils";
+import { format } from "date-fns";
+import { Calendar } from "@/components/ui/calendar";
+import { Clock } from "lucide-react";
 
 const getCurrentDate = () => {
   const today = new Date();
@@ -23,14 +26,38 @@ export default function CarBookingForm() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const navigate = useNavigate(); // Initialize useNavigate
+  const [date, setDate] = useState();
+  const [isTimePopoverOpen, setIsTimePopoverOpen] = useState(false);
+  const [selectedTime, setSelectedTime] = useState("");
 
   const [bookingDetails, setBookingDetails] = useState({
     departureDate: "",
+    departureTime: "",
     pickUpLocation: "",
     dropOffLocation: "",
     peopleCount: "",
     travelType: "One Way",
   });
+
+  // Generate time slots from 00:00 to 23:30 with 30-minute intervals
+  const generateTimeSlots = () => {
+    const slots = [];
+    for (let hour = 0; hour < 24; hour++) {
+      for (let minute of ['00', '30']) {
+        const time = `${String(hour).padStart(2, '0')}:${minute}`;
+        slots.push(time);
+      }
+    }
+    return slots;
+  };
+
+  const timeSlots = generateTimeSlots();
+
+  const handleTimeSelect = (time) => {
+    setSelectedTime(time);
+    setBookingDetails(prev => ({ ...prev, departureTime: time }));
+    setIsTimePopoverOpen(false);
+  };
 
   const fetchLocation = () => {
     if (navigator.geolocation) {
@@ -66,8 +93,8 @@ export default function CarBookingForm() {
     setError(null);
 
     try {
-      const { departureDate, pickUpLocation, dropOffLocation, peopleCount } = bookingDetails;
-      if (!departureDate || !pickUpLocation || !dropOffLocation || !peopleCount) {
+      const { departureDate, departureTime, pickUpLocation, dropOffLocation, peopleCount } = bookingDetails;
+      if (!departureDate || !departureTime || !pickUpLocation || !dropOffLocation || !peopleCount) {
         throw new Error('Please fill in all required fields');
       }
 
@@ -86,6 +113,7 @@ export default function CarBookingForm() {
         pickUpLocation,
         dropOffLocation,
         departureDate,
+        departureTime,
         peopleCount: parseInt(peopleCount),
         travelType: bookingDetails.travelType
       };
@@ -138,6 +166,41 @@ export default function CarBookingForm() {
                 value={bookingDetails.departureDate}
                 onChange={(e) => setBookingDetails({ ...bookingDetails, departureDate: e.target.value })}
               />
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-sm font-semibold text-gray-600">DEPARTURE TIME</Label>
+              <Popover open={isTimePopoverOpen} onOpenChange={setIsTimePopoverOpen}>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "w-full justify-start text-left font-normal",
+                      !selectedTime && "text-muted-foreground"
+                    )}
+                  >
+                    <Clock className="mr-2 h-4 w-4" />
+                    {selectedTime || "Select time"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-full p-0 h-[300px] overflow-y-auto">
+                  <div className="grid gap-1">
+                    {timeSlots.map((time) => (
+                      <Button
+                        key={time}
+                        variant="ghost"
+                        className={cn(
+                          "justify-start font-normal",
+                          selectedTime === time && "bg-orange-100"
+                        )}
+                        onClick={() => handleTimeSelect(time)}
+                      >
+                        {time}
+                      </Button>
+                    ))}
+                  </div>
+                </PopoverContent>
+              </Popover>
             </div>
 
             <div className="space-y-2">

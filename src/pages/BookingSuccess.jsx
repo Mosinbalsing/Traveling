@@ -5,13 +5,14 @@ import AOS from "aos";
 import "aos/dist/aos.css";
 import jsPDF from 'jspdf';
 import logo from "../assets/images/logo.png"; // Make sure this path is correct
+import { toast } from "react-toastify";
 
 export default function BookingSuccess() {
   const location = useLocation();
   const navigate = useNavigate();
   const { bookingDetails } = location.state || {};
-  console.log("booking Success", bookingDetails);
-    
+  console.log("Booking Details from BookingSuccess:", bookingDetails);
+  
   useEffect(() => {
     AOS.init({
       duration: 1000,
@@ -20,6 +21,7 @@ export default function BookingSuccess() {
 
     // Redirect if no booking details
     if (!bookingDetails) {
+      toast.error("No booking details found");
       navigate('/');
     }
   }, [bookingDetails, navigate]);
@@ -66,15 +68,9 @@ export default function BookingSuccess() {
     const doc = new jsPDF();
     
     // Add logo
-    const logoWidth = 50; // Adjust size as needed
-    const logoHeight = 20; // Adjust size as needed
-    // Add logo image - positioned at top left
+    const logoWidth = 50;
+    const logoHeight = 20;
     doc.addImage(logo, 'PNG', 80, 10, logoWidth, logoHeight);
-    
-    // Add company header - adjusted position to be next to logo
-    // doc.setFontSize(22);
-    // doc.setTextColor(0, 100, 0); // Dark green color
-    // doc.text('Shree Tours and Travel', 250, 25, { align: 'right' });
     
     // Add booking confirmation
     doc.setFontSize(16);
@@ -88,21 +84,23 @@ export default function BookingSuccess() {
 
     // Set font size for content
     doc.setFontSize(12);
-    let y = 60; // Adjusted starting position
+    let y = 60;
 
     // Booking Details
     doc.setFont(undefined, 'bold');
     doc.text('Booking Details:', 20, y);
     doc.setFont(undefined, 'normal');
     y += 10;
+    doc.text(`Booking ID: ${bookingDetails.bookingId || 'N/A'}`, 20, y);
+    y += 7;
     doc.text(`Booking Date: ${formatDate(bookingDetails.bookingDate)}`, 20, y);
     y += 7;
     doc.text(`Travel Date: ${formatDate(bookingDetails.travelDate)}`, 20, y);
     y += 7;
-    if (bookingDetails.pickupTime) {
-      doc.text(`Pickup Time: ${formatTime(bookingDetails.pickupTime)}`, 20, y);
-      y += 7;
-    }
+    doc.text(`Travel Time: ${formatTime(bookingDetails.departureTime)}`, 20, y);
+    y += 7;
+    doc.text(`Status: ${bookingDetails.status || 'Confirmed'}`, 20, y);
+    y += 7;
 
     // Location Details
     y += 5;
@@ -128,8 +126,8 @@ export default function BookingSuccess() {
 
     // Format and add price with proper Indian currency format
     const price = vehiclePrices[bookingDetails.vehicleType];
-    const formattedPrice = price ? formatPrice(price) : 'Price not available';
-    doc.text(`Price: ${formattedPrice}`, 20, y);
+    
+    doc.text(`Price: RS ${price}`, 20, y);
     y += 7;
 
     // User Details
@@ -169,7 +167,7 @@ export default function BookingSuccess() {
             Booking Confirmed!
           </h1>
           <p className="text-gray-600" data-aos="fade-up" data-aos-delay="100">
-            Your taxi has been successfully booked
+            Your booking ID: {bookingDetails.bookingId|| 'N/A'}
           </p>
         </div>
 
@@ -188,8 +186,8 @@ export default function BookingSuccess() {
                   <p className="font-medium">{formatDate(bookingDetails.travelDate)}</p>
                 </div>
                 <div className="space-y-2">
-                  <p className="text-sm text-gray-600">Pickup Time</p>
-                  <p className="font-medium">{formatTime(bookingDetails.pickupTime)}</p>
+                  <p className="text-sm text-gray-600">Travel Time</p>
+                  <p className="font-medium">{formatTime(bookingDetails.departureTime)}</p>
                 </div>
               </div>
 

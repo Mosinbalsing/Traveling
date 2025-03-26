@@ -1,8 +1,8 @@
 import axios from 'axios';
 
 // Base URL for your API
-export const BASE_URL = 'https://noble-liberation-production.up.railway.app';
-// export const BASE_URL = 'http://localhost:3000';
+// export const BASE_URL = 'https://noble-liberation-production.up.railway.app';
+export const BASE_URL = 'http://localhost:3000';
 
 // Create an Axios instance with default headers
 const api = axios.create({
@@ -36,7 +36,8 @@ export const API_ENDPOINTS = {
   VERIFY_OTP: '/api/auth/verify-otp',
   CREATE_BOOKING: '/api/auth/create',
   STORE_USER_DETAILS: '/api/auth/store-user-details', // New endpoint for storing user details
-  CREATE_BOOKING_DETAILS: '/api/booking/create-booking',
+  CREATE_BOOKING_DETAILS: '/api/bookings/create-booking',
+  SEARCH_BOOKINGS: '/api/bookings/search',
   
 };
 
@@ -143,8 +144,59 @@ export const bookingAPI = {
   // Updated checkMobileExists to send the mobile number in the correct format
   checkMobileExists: (mobile) => testAPIRequest('POST', API_ENDPOINTS.SEARCH_MOBILE, { mobile }),
 
-  createBookingDetails: (bookingData) => 
-    apiRequest('POST', API_ENDPOINTS.CREATE_BOOKING_DETAILS, bookingData),
+  createBookingDetails: async (bookingData) => {
+    try {
+      // Validate required fields before making the API call
+      const requiredFields = [
+        'bookingDate',
+        'travelDate',
+        'departureTime',
+        'vehicleType',
+        'numberOfPassengers',
+        'pickupLocation',
+        'dropLocation',
+        'price',
+        'userDetails'
+      ];
 
+      const missingFields = requiredFields.filter(field => !bookingData[field]);
+
+      if (missingFields.length > 0) {
+        throw new Error(`Missing required fields: ${missingFields.join(', ')}`);
+      }
+
+      // Validate user details
+      const requiredUserFields = ['name', 'email', 'mobile'];
+      const missingUserFields = requiredUserFields.filter(field => !bookingData.userDetails[field]);
+
+      if (missingUserFields.length > 0) {
+        throw new Error(`Missing required user details: ${missingUserFields.join(', ')}`);
+      }
+
+      console.log('Creating booking details with validated data:', bookingData);
+      const response = await apiRequest('POST', API_ENDPOINTS.CREATE_BOOKING_DETAILS, bookingData);
+      
+      if (!response.success) {
+        throw new Error(response.message || 'Failed to create booking');
+      }
+      
+      return response;
+    } catch (error) {
+      console.error("Error creating booking:", error);
+      throw error;
+    }
+  },
+
+  searchBookings: async (searchData) => {
+    try {
+      // Send as POST request with data in body instead of query params
+      const response = await apiRequest('POST', API_ENDPOINTS.SEARCH_BOOKINGS, searchData);
+      console.log("Search Bookings Response:", response);
+      return response;
+    } catch (error) {
+      console.error("Error searching bookings:", error);
+      throw error;
+    }
+  },
 };
 

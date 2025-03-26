@@ -1,7 +1,7 @@
-import { useState  } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { MapPin, Users, Calendar } from "lucide-react";
+import { MapPin, Users, Calendar, Clock } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import Wagnor from "assets/images/Cars/Wagnor.png";
 import Swift from "assets/images/Cars/Swift.png";
@@ -12,6 +12,18 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "react-toastify";
 import { authAPI, bookingAPI, taxiAPI } from "@/config/api";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { cn } from "@/lib/utils";
+
+// Add this function before the carCategories array
+const getCurrentDate = () => {
+  const today = new Date();
+  const year = today.getFullYear();
+  const month = String(today.getMonth() + 1).padStart(2, '0');
+  const day = String(today.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
 
 const carCategories = [
   {
@@ -94,6 +106,13 @@ export default function CarRental() {
   const [error, setError] = useState("");
   const [isUserDetailsRequired, setIsUserDetailsRequired] = useState(false);
   const [selectedCar, setSelectedCar] = useState(null);
+  const [selectedEditTime, setSelectedEditTime] = useState("");
+  const [isEditTimePopoverOpen, setIsEditTimePopoverOpen] = useState(false);
+  const [userDetailsState, setUserDetailsState] = useState({
+    name: '',
+    email: '',
+    mobile: ''
+  });
 
   const cities = [
     "Pune",
@@ -117,61 +136,40 @@ export default function CarRental() {
 
   const handleMobileSubmit = async () => {
     setIsLoading(true);
-
     try {
       if (!mobile) {
         throw new Error("Mobile number is required");
       }
 
-      // Get user details from checkMobileExists
+      // Check API directly
       const userResponse = await bookingAPI.checkMobileExists(mobile);
-      // Add detailed logging
-      console.log("Complete User Response:", userResponse);
-      console.log("Response Status:", userResponse.success);
-      console.log("Response Data:", userResponse.data);
-
       if (userResponse.success && userResponse.data) {
-        // Log the user details in a structured way
         const userData = {
           name: userResponse.data.name,
           email: userResponse.data.email,
           mobile: userResponse.data.mobile,
-          // Add any other fields that come in the response
         };
-        console.log("Found User Details:", userData);
 
-        // Auto-fill the form with existing user details
         setName(userData.name);
         setEmail(userData.email);
+        setMobile(userData.mobile);
+        setUserDetailsState(userData);
         setIsUserDetailsRequired(false);
-
-        // Log the state updates
-        console.log("Form Auto-filled with:", {
-          name: userData.name,
-          email: userData.email,
-          mobile: userData.mobile
-        });
       } else {
-        // If user not found, show the form to collect details
         setIsUserDetailsRequired(true);
-        console.log("No existing user found for mobile:", mobile);
       }
 
-      // Proceed with OTP sending
       const otpResponse = await bookingAPI.sendOTP({
         phoneNumber: mobile,
         userName: userResponse.data?.name || "user"
       });
 
       if (otpResponse.success) {
-        toast.success("OTP sent to your mobile number.");
         setIsOtpVerificationRequired(true);
-        console.log("OTP sent successfully");
-      } else {
-        throw new Error("Failed to send OTP");
+        toast.success("OTP sent to your mobile number.");
       }
     } catch (error) {
-      console.error("Error in handleMobileSubmit:", error);
+      console.error("Error:", error);
       setIsUserDetailsRequired(true);
       toast.error(error.message || "An error occurred");
     } finally {
@@ -179,36 +177,36 @@ export default function CarRental() {
     }
   };
   console.log(mobile, name, email, otp);
-  
+  const userDatas = {
+    name:name,
+    mobile:mobile
+  }
   const handleUserDetailsSubmit = async () => {
     setIsLoading(true);
     try {
-      // Ensure mobile, name, and email are available
       if (!mobile || !name || !email) {
-        throw new Error("Mobile, name, and email are required");
+        throw new Error("All fields are required");
       }
 
-      const response = await authAPI.storeUserDetails({ mobile, name, email });
-      console.log("User  details storage response:", response);
-      
+      const userData = { mobile, name, email };
+      setUserDetailsState(userData);
+
+      const response = await authAPI.storeUserDetails(userData);
       if (response.success) {
-        toast.success("User  details stored successfully. OTP sent.");
         const otpResponse = await bookingAPI.sendOTP({
           phoneNumber: mobile,
           userName: name
         });
+        
         if (otpResponse.success) {
           setIsOtpVerificationRequired(true);
-          setIsUserDetailsRequired(false); // Hide name and email fields
-        } else {
-          throw new Error("Failed to send OTP");
+          setIsUserDetailsRequired(false);
+          toast.success("Details saved and OTP sent");
         }
-      } else {
-        throw new Error("Failed to store user details");
       }
     } catch (error) {
-      console.error("Error storing user details:", error);
-      toast.error(error.message || "Failed to store user details");
+      console.error("Error:", error);
+      toast.error(error.message || "Failed to save details");
     } finally {
       setIsLoading(false);
     }
@@ -217,17 +215,29 @@ export default function CarRental() {
   const handleOtpSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
-    const phoneNumber = mobile;
     try {
-      // Verify OTP
-      const response = await bookingAPI.verifyOTP({ phoneNumber, otp });
-      console.log("OTP Verification Response:", response);
+      // Log user details before OTP verification
+      console.log("User Details before OTP verification:", {
+        userDetailsState,
+        name,
+        email,
+        mobile
+      });
+
+      const response = await bookingAPI.verifyOTP({ phoneNumber: mobile, otp });
       
       if (response.success) {
+        // Log user details after OTP verification
+        console.log("User Details after OTP verification:", {
+          userDetailsState,
+          name,
+          email,
+          mobile
+        });
+
         toast.success("OTP verified successfully.");
         setIsMobileDialogOpen(false);
 
-        // Map the vehicle type to match backend expectations
         const vehicleTypeMap = {
           'Hatchback': 'Hatchback',
           'Sedan': 'Sedan',
@@ -236,72 +246,78 @@ export default function CarRental() {
         };
 
         const formattedVehicleType = vehicleTypeMap[selectedCar.type];
-        console.log("Original Vehicle Type:", selectedCar.type);
-        console.log("Formatted Vehicle Type:", formattedVehicleType);
-
-        if (!formattedVehicleType) {
-          throw new Error(`Invalid vehicle type: ${selectedCar.type}`);
-        }
-
-        // Prepare booking data using existing user data
+        
         const bookingData = {
           bookingDate: new Date().toISOString(),
           travelDate: editedBookingDetails.departureDate,
+          departureTime: editedBookingDetails.departureTime,
           vehicleType: formattedVehicleType,
           numberOfPassengers: parseInt(editedBookingDetails.peopleCount),
           pickupLocation: editedBookingDetails.pickUpLocation,
           dropLocation: editedBookingDetails.dropOffLocation,
-          userDetails: {
-            name: name,
-            email: email,
-            mobile: mobile
-          }
+          price: selectedCar.price,
+          userDetails: userDetailsState,
+          status: "CONFIRMED",
+          travelType: editedBookingDetails.travelType || "One Way"
         };
 
-        console.log("Booking Data being sent:", bookingData);
+        // Log booking data before API call
+        console.log("Booking Data with User Details:", bookingData);
 
-        try {
-          // Create booking
-          const bookingResponse = await bookingAPI.createBookingDetails(bookingData);
-          console.log("Booking Response:", bookingResponse);
+        const bookingResponse = await bookingAPI.createBookingDetails(bookingData);
 
-          if (bookingResponse.success) {
-            toast.success("Booking created successfully!");
+        if (bookingResponse.success) {
+          // Create a proper search criteria object
+          const searchCriteria = {
+            pickupLocation: editedBookingDetails.pickUpLocation,
+            dropLocation: editedBookingDetails.dropOffLocation,
+            date: editedBookingDetails.departureDate,
+            vehicleType: formattedVehicleType,
+            userDetails: {
+              name: name,
+              mobile: mobile,
+              email: email
+            }
+          };
+
+          // Log the search criteria for debugging
+          console.log("Search Criteria being sent:", searchCriteria);
+
+          const searchResponse = await bookingAPI.searchBookings(searchCriteria);
+          
+          // Log the search response
+          console.log("Search Response:", searchResponse);
+
+          if (searchResponse.success && searchResponse.data?.length > 0) {
+            const latestBooking = searchResponse.data[0];
             
-            // Prepare navigation data using the booking data directly
-            const navigationData = {
-              bookingDetails: {
-                bookingDate: bookingData.bookingDate,
-                travelDate: bookingData.travelDate,
-                PickupLocation: bookingData.pickupLocation,
-                DropLocation: bookingData.dropLocation,
-                vehicleType: bookingData.vehicleType,
-                numberOfPassengers: bookingData.numberOfPassengers,
-                pickupAddress: bookingData.pickupLocation,
-                pickupCity: bookingData.pickupLocation,
-                price: bookingData.price,
-                userDetails: {
-                  name: name,
-                  email: email,
-                  mobile: mobile
-                }
-              }
-            };
-
-            console.log("Navigation Data:", navigationData);
-
-            // Navigate immediately after successful booking
             navigate("/booking-success", { 
-              state: navigationData,
+              state: {
+                bookingDetails: {
+                  ...latestBooking,
+                  userDetails: {
+                    name: name,
+                    mobile: mobile,
+                    email: email
+                  },
+                  PickupLocation: latestBooking.pickupLocation || editedBookingDetails.pickUpLocation,
+                  DropLocation: latestBooking.dropLocation || editedBookingDetails.dropOffLocation,
+                  vehicleType: formattedVehicleType,
+                  price: selectedCar.price,
+                  departureTime: editedBookingDetails.departureTime,
+                  bookingDate: new Date().toISOString(),
+                  travelDate: editedBookingDetails.departureDate,
+                  numberOfPassengers: parseInt(editedBookingDetails.peopleCount)
+                }
+              },
               replace: true
             });
+            toast.success("Booking created successfully!");
           } else {
-            throw new Error(bookingResponse.message || "Failed to create booking");
+            throw new Error("Could not find the created booking");
           }
-        } catch (error) {
-          console.error("Booking Creation Error:", error);
-          toast.error(error.message || "Failed to create booking");
-          throw error;
+        } else {
+          throw new Error(bookingResponse.message || "Failed to create booking");
         }
       } else {
         throw new Error("Invalid OTP. Please try again.");
@@ -333,7 +349,7 @@ export default function CarRental() {
     setError("");
 
     try {
-      const { departureDate, pickUpLocation, dropOffLocation, peopleCount, travelType } = editedBookingDetails;
+      const { departureDate, departureTime, pickUpLocation, dropOffLocation, peopleCount, travelType } = editedBookingDetails;
 
       if (pickUpLocation === dropOffLocation) {
         setError("Pickup and Drop Location cannot be the same.");
@@ -341,13 +357,14 @@ export default function CarRental() {
         return;
       }
 
-      if (!departureDate || !pickUpLocation || !dropOffLocation || !peopleCount) {
+      if (!departureDate || !departureTime || !pickUpLocation || !dropOffLocation || !peopleCount) {
         setError("Please fill in all required fields.");
         return;
       }
 
       const formData = {
         departureDate,
+        departureTime,
         pickUpLocation,
         dropOffLocation,
         peopleCount: parseInt(peopleCount),
@@ -365,7 +382,7 @@ export default function CarRental() {
       toast.error(error.message || 'Failed to update results');
     } finally {
       setIsLoading(false);
-      handleEditClose(); // Close the edit dialog after submission
+      handleEditClose();
     }
   };
 
@@ -377,17 +394,59 @@ export default function CarRental() {
     }));
   };
 
+  const generateTimeSlots = () => {
+    const slots = [];
+    for (let hour = 0; hour < 24; hour++) {
+      for (let minute of ['00', '30']) {
+        const time = `${String(hour).padStart(2, '0')}:${minute}`;
+        slots.push(time);
+      }
+    }
+    return slots;
+  };
+
+  const timeSlots = generateTimeSlots();
+
+  const handleEditTimeSelect = (time) => {
+    setSelectedEditTime(time);
+    setEditedBookingDetails(prev => ({ ...prev, departureTime: time }));
+    setIsEditTimePopoverOpen(false);
+  };
+
+  const handleDirectBooking = async () => {
+    try {
+      // ... existing booking creation code ...
+
+      const bookingResponse = await bookingAPI.createBookingDetails(bookingData);
+      
+      if (bookingResponse.success) {
+        navigate("/booking-success", { 
+          state: {
+            bookingId: bookingResponse.data.bookingId
+          },
+          replace: true
+        });
+      } else {
+        throw new Error("Failed to create booking");
+      }
+
+    } catch (error) {
+      console.error("Error in handleDirectBooking:", error);
+      toast.error(error.message || "Failed to create booking");
+    }
+  };
+
   return (
     <div className="flex flex-col lg:flex-row bg-gray-50 min-h-screen sm:mt-0 mt-[100px]">
       <div className="w-full lg:w-80 bg-white p-4 lg:p-6 shadow-lg lg:fixed lg:h-screen lg:overflow-y-auto">
         <div className="flex justify-between items-center mb-4">
           <Button variant="outline" className="w-[48%]">
-            <Link to="/">Back to home</Link>
-          </Button>
+          <Link to="/">Back to home</Link>
+        </Button>
           <Button 
             variant="outline" 
             className="w-[48%]"
-            onClick={handleEditOpen} // Open edit dialog
+            onClick={handleEditOpen}
           >
             Edit Details
           </Button>
@@ -409,7 +468,14 @@ export default function CarRental() {
               <span className="text-sm lg:text-base">{editedBookingDetails.dropOffLocation}</span>
             </div>
           </div>
+   <div className="space-y-2 w-full lg:w-auto">
+            <h2 className="text-base lg:text-lg font-semibold">Departure Time</h2>
+            <div className="flex items-center gap-2 text-red-600">
+            <Clock className="h-4 w-4 lg:h-5 lg:w-5" />
 
+              <span className="text-sm lg:text-base">{editedBookingDetails.departureTime}</span>
+            </div>
+          </div>
           <div className="space-y-2 w-full lg:w-auto">
             <h2 className="text-base lg:text-lg font-semibold">Passengers</h2>
             <div className="flex items-center gap-2 text-gray-600">
@@ -450,20 +516,20 @@ export default function CarRental() {
 
             return (
               <Card key={index} className="overflow-hidden hover:shadow-lg transition-shadow">
-                <CardContent className="p-4 lg:p-6">
+              <CardContent className="p-4 lg:p-6">
                   <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between">
                     <div className="flex flex-col sm:flex-row sm:items-start gap-4 sm:gap-6">
-                      <div className="relative h-48 w-full sm:w-48 shrink-0 overflow-hidden rounded-lg">
-                        <img
+                    <div className="relative h-48 w-full sm:w-48 shrink-0 overflow-hidden rounded-lg">
+                      <img
                           src={matchedCar.image}
                           alt={matchedCar.type}
                           className="object-contain w-full h-full"
-                        />
-                      </div>
+                      />
+                    </div>
                       <div className="space-y-4">
                         <div>
                           <h3 className="text-xl lg:text-2xl font-bold">{matchedCar.type}</h3>
-                          <p className="text-sm lg:text-base text-gray-600">
+                      <p className="text-sm lg:text-base text-gray-600">
                             {matchedCar.seating} | {matchedCar.ac ? "AC" : "Non-AC"}
                           </p>
                         </div>
@@ -482,27 +548,26 @@ export default function CarRental() {
                       </div>
                     </div>
 
-                    <div className="mt-4 sm:mt-0 flex items-center justify-between sm:flex-col sm:items-end gap-4">
+                  <div className="mt-4 sm:mt-0 flex items-center justify-between sm:flex-col sm:items-end gap-4">
                       <div className="text-right">
                         <div className="text-sm text-gray-600">Starting from</div>
                         <div className="text-xl lg:text-2xl font-bold">₹{matchedCar.price?.toLocaleString()}</div>
-                        <Button
-                          className="bg-[#76B82A] hover:bg-[#5a8c20] text-sm lg:text-base"
+                    <Button
+                      className="bg-[#76B82A] hover:bg-[#5a8c20] text-sm lg:text-base"
                           onClick={() => handleBookNow(matchedCar)}
-                        >
-                          Book Now
-                        </Button>
+                    >
+                      Book Now
+                    </Button>
                       </div>
-                    </div>
                   </div>
-                </CardContent>
-              </Card>
+                </div>
+              </CardContent>
+            </Card>
             );
           })}
         </div>
       </div>
 
-      {/* Mobile Dialog */}
       <Dialog open={isMobileDialogOpen} onOpenChange={setIsMobileDialogOpen}>
         <DialogContent className="sm:max-w-[425px] bg-white">
           <DialogHeader>
@@ -585,7 +650,6 @@ export default function CarRental() {
         </DialogContent>
       </Dialog>
 
-      {/* Edit Booking Details Dialog */}
       <Dialog open={isEditOpen} onOpenChange={handleEditClose}>
         <DialogContent className="sm:max-w-[425px] bg-white">
           <DialogHeader>
@@ -593,37 +657,94 @@ export default function CarRental() {
           </DialogHeader>
           <form onSubmit={handleEditSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label>Pickup Location</Label>
-              <Input
-                type="text"
-                name="pickUpLocation"
-                value={editedBookingDetails.pickUpLocation}
-                onChange={handleInputChange}
-                placeholder="Enter pickup location"
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>Drop-off Location</Label>
-              <Input
-                type="text"
-                name="dropOffLocation"
-                value={editedBookingDetails.dropOffLocation}
-                onChange={handleInputChange}
-                placeholder="Enter drop-off location"
-                required
-              />
-            </div>
-            <div className="space-y-2">
               <Label>Departure Date</Label>
               <Input
                 type="date"
                 name="departureDate"
                 value={editedBookingDetails.departureDate}
                 onChange={handleInputChange}
+                min={getCurrentDate()}
                 required
               />
             </div>
+
+            <div className="space-y-2">
+              <Label>Departure Time</Label>
+              <Popover open={isEditTimePopoverOpen} onOpenChange={setIsEditTimePopoverOpen}>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "w-full justify-start text-left font-normal",
+                      !editedBookingDetails.departureTime && "text-muted-foreground"
+                    )}
+                  >
+                    <Clock className="mr-2 h-4 w-4" />
+                    {editedBookingDetails.departureTime || "Select time"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-full p-0 h-[300px] overflow-y-auto">
+                  <div className="grid gap-1">
+                    {timeSlots.map((time) => (
+                      <Button
+                        key={time}
+                        variant="ghost"
+                        className={cn(
+                          "justify-start font-normal",
+                          editedBookingDetails.departureTime === time && "bg-orange-100"
+                        )}
+                        onClick={() => handleEditTimeSelect(time)}
+                      >
+                        {time}
+                      </Button>
+                    ))}
+                  </div>
+                </PopoverContent>
+              </Popover>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Pickup Location</Label>
+              <Select 
+                name="pickUpLocation"
+                value={editedBookingDetails.pickUpLocation}
+                onValueChange={(value) => handleInputChange({ target: { name: 'pickUpLocation', value }})}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select pickup location" />
+                </SelectTrigger>
+                <SelectContent>
+                  {cities.map((city) => (
+                    <SelectItem key={city} value={city}>
+                      {city}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Drop-off Location</Label>
+              <Select 
+                name="dropOffLocation"
+                value={editedBookingDetails.dropOffLocation}
+                onValueChange={(value) => handleInputChange({ target: { name: 'dropOffLocation', value }})}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select drop-off location" />
+                </SelectTrigger>
+                <SelectContent>
+                  {cities
+                    .filter(city => city !== editedBookingDetails.pickUpLocation)
+                    .map((city) => (
+                      <SelectItem key={city} value={city}>
+                        {city}
+                      </SelectItem>
+                    ))}
+                </SelectContent>
+              </Select>
+            </div>
+
             <div className="space-y-2">
               <Label>Number of Passengers</Label>
               <Input
@@ -632,20 +753,31 @@ export default function CarRental() {
                 value={editedBookingDetails.peopleCount}
                 onChange={handleInputChange}
                 placeholder="Enter number of passengers"
+                min="1"
                 required
               />
             </div>
+
             <div className="space-y-2">
               <Label>Travel Type</Label>
-              <Input
-                type="text"
+              <Select 
                 name="travelType"
                 value={editedBookingDetails.travelType}
-                onChange={handleInputChange}
-                placeholder="Enter travel type"
-                required
-              />
+                onValueChange={(value) => handleInputChange({ target: { name: 'travelType', value }})}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select travel type" />
+                </SelectTrigger>
+                <SelectContent>
+                  {["One Way"].map((type) => (
+                    <SelectItem key={type} value={type}>
+                      {type}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
+
             {error && <p className="text-red-500">{error}</p>}
             <div className="flex justify-end gap-2">
               <Button type="button" variant="outline" onClick={handleEditClose}>
