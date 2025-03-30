@@ -1,8 +1,8 @@
 import axios from 'axios';
 
 // Base URL for your API
-export const BASE_URL = 'https://noble-liberation-production.up.railway.app';
-// export const BASE_URL = 'http://localhost:3000';
+// export const BASE_URL = 'https://noble-liberation-production.up.railway.app';
+export const BASE_URL = 'http://localhost:3000';
 
 // Create an Axios instance with default headers
 const api = axios.create({
@@ -28,20 +28,16 @@ api.interceptors.request.use(
 
 // API Endpoints
 export const API_ENDPOINTS = {
-  
-
   SEARCH_TAXIS: '/api/auth/available-taxis',
   SEARCH_MOBILE: '/api/auth/search-mobile',
   SEND_OTP: '/api/auth/send-otp',
   VERIFY_OTP: '/api/auth/verify-otp',
   CREATE_BOOKING: '/api/auth/create',
-  STORE_USER_DETAILS: '/api/auth/store-user-details', // New endpoint for storing user details
+  STORE_USER_DETAILS: '/api/auth/store-user-details',
   CREATE_BOOKING_DETAILS: '/api/bookings/create-booking',
-<<<<<<< HEAD
   SEARCH_BOOKINGS: '/api/bookings/search',
-=======
->>>>>>> d796d87062c7707732b74212a2715161de557c35
-  
+  ADMIN_LOGIN: '/api/admin/login',
+  ADMIN_DATA: '/api/admin/profile',
 };
 
 // Generic function for API requests
@@ -90,17 +86,16 @@ const testAPIRequest = async (method, url, data = {}, headers = {}) => {
 
 // Auth API
 export const authAPI = {
-  
   storeUserDetails: (mobile, name, email) => {
     const userDetails = { name, email, mobile };
-    console.log('Storing user details:', userDetails); // Log the data being sent
+    console.log('Storing user details:', userDetails);
     return apiRequest('POST', API_ENDPOINTS.STORE_USER_DETAILS, userDetails);
   },
   adminLogin: async (credentials) => {
     try {
       const response = await axios({
         method: 'POST',
-        url: `${BASE_URL}/api/admin/login`,
+        url: `${BASE_URL}${API_ENDPOINTS.ADMIN_LOGIN}`,
         data: credentials,
         headers: {
           'Content-Type': 'application/json',
@@ -113,13 +108,22 @@ export const authAPI = {
       throw error.response?.data || error;
     }
   },
-  verifyAdminOTP: async (data) => {
-    return await testAPIRequest("post", "/api/admin/verify-otp", data);
-  },
   getAdminData: async (token) => {
-    return await testAPIRequest("get", "/api/admin/data", null, {
-      headers: { Authorization: `Bearer ${token}` }
-    });
+    try {
+      const response = await axios({
+        method: 'GET',
+        url: `${BASE_URL}${API_ENDPOINTS.ADMIN_DATA}`,
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      console.log('Admin Data API Response:', response);
+      return response.data;
+    } catch (error) {
+      console.error('Admin Data Error:', error.response || error);
+      throw error.response?.data || error;
+    }
   }
 };
 

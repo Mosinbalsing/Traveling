@@ -22,6 +22,8 @@ const SlidingAuthForm = lazy(() => import("./components/LogInSigUp"));
 const BookingSuccess = lazy(() => import("@/pages/BookingSuccess"));
 const AdminLogin = lazy(() => import("@/pages/admin/AdminLogin"));
 const AdminDashboard = lazy(() => import("@/pages/admin/AdminDashboard"));
+const Users = lazy(() => import("./pages/admin/Users"));
+const Bookings = lazy(() => import("./pages/admin/Bookings"));
 
 function ScrollToTop() {
   const { pathname } = useLocation();
@@ -100,6 +102,8 @@ function App() {
               </ProtectedAdminRoute>
             } 
           />
+          <Route path="/admin/users" element={<Users />} />
+          <Route path="/admin/bookings" element={<Bookings />} />
         </Routes>
       </Suspense>
 

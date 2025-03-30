@@ -102,6 +102,7 @@ export default function AdminLogin() {
       };
       console.log("Sending verification data:", verificationData);
 
+      // Use regular OTP verification endpoint
       const response = await bookingAPI.verifyOTP(verificationData);
       console.log("OTP verification response:", response);
 
@@ -118,13 +119,9 @@ export default function AdminLogin() {
         // Show success message
         toast.success("Login successful!");
 
-        // Add a small delay to ensure localStorage is set
-        setTimeout(() => {
-          // Force a hard redirect to dashboard
-          window.location.href = "/admin/dashboard";
-        }, 500);
-
-        return; // Exit the function after initiating redirect
+        // Navigate to dashboard using navigate instead of window.location
+        navigate("/admin/dashboard", { replace: true });
+        return;
       } else {
         throw new Error(response?.message || "Invalid OTP");
       }
@@ -135,6 +132,7 @@ export default function AdminLogin() {
       // Clear auth data on error
       localStorage.removeItem("isAdminAuthenticated");
       localStorage.removeItem("adminLoggedIn");
+      localStorage.removeItem("adminToken");
     } finally {
       setIsLoading(false);
     }
