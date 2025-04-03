@@ -140,158 +140,164 @@ export default function AdminDashboard() {
 
   return (
     <AdminLayout>
-      <div className="p-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-800">Dashboard Overview</h1>
+      <div className="p-4 md:p-8">
+        <div className="mb-6 md:mb-8">
+          <h1 className="text-2xl md:text-3xl font-bold text-gray-800">Dashboard Overview</h1>
         </div>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-1 gap-6 mb-8 md:grid-cols-2 lg:grid-cols-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-6 md:mb-8">
           {/* Total Users */}
-          <div className="p-6 bg-white rounded-lg shadow-sm">
+          <div className="p-4 md:p-6 bg-white rounded-lg shadow-sm">
             <div className="flex items-center">
               <div className="p-3 bg-blue-100 rounded-full">
-                <UsersIcon className="w-8 h-8 text-blue-600" />
+                <UsersIcon className="w-6 h-6 md:w-8 md:h-8 text-blue-600" />
               </div>
               <div className="ml-4">
                 <h2 className="text-sm font-medium text-gray-600">Total Users</h2>
-                <p className="text-2xl font-semibold text-gray-800">{stats.totalUsers}</p>
+                <p className="text-xl md:text-2xl font-semibold text-gray-800">{stats.totalUsers}</p>
               </div>
             </div>
           </div>
 
           {/* Total Bookings */}
-          <div className="p-6 bg-white rounded-lg shadow-sm">
+          <div className="p-4 md:p-6 bg-white rounded-lg shadow-sm">
             <div className="flex items-center">
               <div className="p-3 bg-green-100 rounded-full">
-                <CalendarIcon className="w-8 h-8 text-green-600" />
+                <CalendarIcon className="w-6 h-6 md:w-8 md:h-8 text-green-600" />
               </div>
               <div className="ml-4">
                 <h2 className="text-sm font-medium text-gray-600">Total Bookings</h2>
-                <p className="text-2xl font-semibold text-gray-800">{stats.totalBookings}</p>
+                <p className="text-xl md:text-2xl font-semibold text-gray-800">{stats.totalBookings}</p>
               </div>
             </div>
           </div>
 
           {/* Upcoming Bookings */}
-          <div className="p-6 bg-white rounded-lg shadow-sm">
+          <div className="p-4 md:p-6 bg-white rounded-lg shadow-sm">
             <div className="flex items-center">
               <div className="p-3 bg-yellow-100 rounded-full">
-                <CalendarIcon className="w-8 h-8 text-yellow-600" />
+                <CalendarIcon className="w-6 h-6 md:w-8 md:h-8 text-yellow-600" />
               </div>
               <div className="ml-4">
                 <h2 className="text-sm font-medium text-gray-600">Upcoming Bookings</h2>
-                <p className="text-2xl font-semibold text-gray-800">{stats.upcomingBookings}</p>
+                <p className="text-xl md:text-2xl font-semibold text-gray-800">{stats.upcomingBookings}</p>
               </div>
             </div>
           </div>
 
           {/* Past Bookings */}
-          <div className="p-6 bg-white rounded-lg shadow-sm">
+          <div className="p-4 md:p-6 bg-white rounded-lg shadow-sm">
             <div className="flex items-center">
               <div className="p-3 bg-purple-100 rounded-full">
-                <CalendarIcon className="w-8 h-8 text-purple-600" />
+                <CalendarIcon className="w-6 h-6 md:w-8 md:h-8 text-purple-600" />
               </div>
               <div className="ml-4">
                 <h2 className="text-sm font-medium text-gray-600">Past Bookings</h2>
-                <p className="text-2xl font-semibold text-gray-800">{stats.pastBookings}</p>
+                <p className="text-xl md:text-2xl font-semibold text-gray-800">{stats.pastBookings}</p>
               </div>
             </div>
           </div>
         </div>
 
         {/* Tables Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
           {/* Recent Users */}
-          <div className="bg-white rounded-lg shadow-sm p-6">
+          <div className="bg-white rounded-lg shadow-sm p-4 md:p-6 overflow-x-auto">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-lg font-semibold">Recent Users</h2>
               <Button variant="outline" size="sm" asChild>
                 <Link to="/admin/users">View All</Link>
               </Button>
             </div>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Joined Date</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {recentUsers.map((user) => (
-                  <TableRow key={user.id}>
-                    <TableCell>{user.name}</TableCell>
-                    <TableCell>{user.email}</TableCell>
-                    <TableCell>{user.joinedDate}</TableCell>
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Name</TableHead>
+                    <TableHead>Email</TableHead>
+                    <TableHead>Joined Date</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {recentUsers.map((user) => (
+                    <TableRow key={user.id}>
+                      <TableCell>{user.name}</TableCell>
+                      <TableCell className="hidden sm:table-cell">{user.email}</TableCell>
+                      <TableCell>{user.joinedDate}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
           </div>
 
           {/* Upcoming Bookings */}
-          <div className="bg-white rounded-lg shadow-sm p-6">
+          <div className="bg-white rounded-lg shadow-sm p-4 md:p-6 overflow-x-auto">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-lg font-semibold">Upcoming Bookings</h2>
               <Button variant="outline" size="sm" asChild>
                 <Link to="/admin/bookings">View All</Link>
               </Button>
             </div>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>User</TableHead>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Route</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {upcomingBookings.map((booking) => (
-                  <TableRow key={booking.id}>
-                    <TableCell>{booking.userName}</TableCell>
-                    <TableCell>{booking.travelDate}</TableCell>
-                    <TableCell>{booking.from} → {booking.to}</TableCell>
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>User</TableHead>
+                    <TableHead>Date</TableHead>
+                    <TableHead className="hidden sm:table-cell">Route</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {upcomingBookings.map((booking) => (
+                    <TableRow key={booking.id}>
+                      <TableCell>{booking.userName}</TableCell>
+                      <TableCell>{booking.travelDate}</TableCell>
+                      <TableCell className="hidden sm:table-cell">{booking.from} → {booking.to}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
           </div>
 
           {/* Past Bookings */}
-          <div className="bg-white rounded-lg shadow-sm p-6 lg:col-span-2">
+          <div className="bg-white rounded-lg shadow-sm p-4 md:p-6 overflow-x-auto xl:col-span-2">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-lg font-semibold">Recent Past Bookings</h2>
               <Button variant="outline" size="sm" asChild>
                 <Link to="/admin/bookings">View All</Link>
               </Button>
             </div>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>User</TableHead>
-                  <TableHead>Date</TableHead>
-                  <TableHead>From</TableHead>
-                  <TableHead>To</TableHead>
-                  <TableHead>Status</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {pastBookings.map((booking) => (
-                  <TableRow key={booking.id}>
-                    <TableCell>{booking.userName}</TableCell>
-                    <TableCell>{booking.travelDate}</TableCell>
-                    <TableCell>{booking.from}</TableCell>
-                    <TableCell>{booking.to}</TableCell>
-                    <TableCell>
-                      <span className="px-2 py-1 rounded-full text-sm bg-gray-100 text-gray-800">
-                        {booking.status}
-                      </span>
-                    </TableCell>
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>User</TableHead>
+                    <TableHead>Date</TableHead>
+                    <TableHead className="hidden sm:table-cell">From</TableHead>
+                    <TableHead className="hidden sm:table-cell">To</TableHead>
+                    <TableHead>Status</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {pastBookings.map((booking) => (
+                    <TableRow key={booking.id}>
+                      <TableCell>{booking.userName}</TableCell>
+                      <TableCell>{booking.travelDate}</TableCell>
+                      <TableCell className="hidden sm:table-cell">{booking.from}</TableCell>
+                      <TableCell className="hidden sm:table-cell">{booking.to}</TableCell>
+                      <TableCell>
+                        <span className="px-2 py-1 rounded-full text-sm bg-gray-100 text-gray-800">
+                          {booking.status}
+                        </span>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
           </div>
         </div>
       </div>

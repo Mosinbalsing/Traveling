@@ -97,6 +97,7 @@ export default function CarRental() {
   const [mobile, setMobile] = useState("");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
+  const [id, setId] = useState("");
   const [otp, setOtp] = useState("");
   const [isOtpSent, setIsOtpSent] = useState(false);
   const [isOtpVerificationRequired, setIsOtpVerificationRequired] = useState(false);
@@ -145,6 +146,7 @@ export default function CarRental() {
       const userResponse = await bookingAPI.checkMobileExists(mobile);
       if (userResponse.success && userResponse.data) {
         const userData = {
+          user_id: userResponse.data.user_id,
           name: userResponse.data.name,
           email: userResponse.data.email,
           mobile: userResponse.data.mobile,
@@ -153,6 +155,7 @@ export default function CarRental() {
         setName(userData.name);
         setEmail(userData.email);
         setMobile(userData.mobile);
+        setId(userData.user_id);
         setUserDetailsState(userData);
         setIsUserDetailsRequired(false);
       } else {
@@ -188,7 +191,7 @@ export default function CarRental() {
         throw new Error("All fields are required");
       }
 
-      const userData = { mobile, name, email };
+      const userData = { mobile, name, email ,id};
       setUserDetailsState(userData);
 
       const response = await authAPI.storeUserDetails(userData);
