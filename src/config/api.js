@@ -38,6 +38,12 @@ export const API_ENDPOINTS = {
   SEARCH_BOOKINGS: '/api/bookings/search',
   ADMIN_LOGIN: '/api/admin/login',
   ADMIN_DATA: '/api/admin/profile',
+  GET_USERS: '/api/admin/users',
+  GET_BOOKING:"/api/admin/bookings",
+  GET_PAST_BOOKING:"/api/admin/pastbookings",
+  UPDATE_USER: '/api/admin/users',
+  DELETE_USER: '/api/admin/delete-user',
+  
 };
 
 // Generic function for API requests
@@ -193,6 +199,73 @@ export const bookingAPI = {
       throw error;
     }
   },
+  getUsers: async (retryCount = 3) => {
+    for (let i = 0; i < retryCount; i++) {
+      try {
+        console.log(`Attempting to fetch users (attempt ${i + 1}/${retryCount})`);
+        const response = await api.get(API_ENDPOINTS.GET_USERS);
+        return response.data;
+      } catch (error) {
+        if (i === retryCount - 1) throw error;
+        if (error.response?.status === 401) throw error;
+        console.log(`Attempt ${i + 1} failed, retrying...`);
+        await new Promise(resolve => setTimeout(resolve, 1000 * (i + 1)));
+      }
+    }
+  },
+  getBooking: async (retryCount = 3) => {
+    for (let i = 0; i < retryCount; i++) {
+      try {
+        const token = localStorage.getItem('adminToken');
+        if (!token) {
+          throw new Error('No admin token found');
+        }
+
+        console.log(`Attempting to fetch bookings (attempt ${i + 1}/${retryCount})`);
+        const response = await axios({
+          method: 'GET',
+          url: `${BASE_URL}${API_ENDPOINTS.GET_BOOKING}`,
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        return response.data;
+      } catch (error) {
+        if (i === retryCount - 1) throw error;
+        if (error.response?.status === 401) throw error;
+        console.log(`Attempt ${i + 1} failed, retrying...`);
+        await new Promise(resolve => setTimeout(resolve, 1000 * (i + 1)));
+      }
+    }
+  },
+  getPastBookings: async (retryCount = 3) => {
+    for (let i = 0; i < retryCount; i++) {
+      try {
+        const token = localStorage.getItem('adminToken');
+        if (!token) {
+          throw new Error('No admin token found');
+        }
+
+        console.log(`Attempting to fetch bookings (attempt ${i + 1}/${retryCount})`);
+        const response = await axios({
+          method: 'GET',
+          url: `${BASE_URL}${API_ENDPOINTS.GET_BOOKING}`,
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        return response.data;
+      } catch (error) {
+        if (i === retryCount - 1) throw error;
+        if (error.response?.status === 401) throw error;
+        console.log(`Attempt ${i + 1} failed, retrying...`);
+        await new Promise(resolve => setTimeout(resolve, 1000 * (i + 1)));
+      }
+    }
+  },
+
 
   searchBookings: async (searchData) => {
     try {
@@ -206,4 +279,36 @@ export const bookingAPI = {
     }
   },
 };
+
+// Add this to your exported functions
+export const userAPI = {
+  updateUser: async (userId, userData) => {
+    try {
+      const token = localStorage.getItem('adminToken');
+      if (!token) {
+        throw new Error('No authentication token found');
+      }
+
+      const response = await fetch(`${BASE_URL}/api/admin/users/${userId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify(userData),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to update user');
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Error updating user:', error);
+      throw error;
+    }
+  },
+};
+
 

@@ -43,14 +43,21 @@ export default function AdminLogin() {
       console.log("Admin login response:", response);
 
       if (response && response.success) {
-        // Store admin data
-        if (response.token) {
-          localStorage.setItem("adminToken", response.token);
+        // Check for token in different possible locations in the response
+        const token = response.token || response.data?.token || response.data?.accessToken;
+        
+        if (token) {
+          localStorage.setItem("adminToken", token);
+          console.log("Token stored in localStorage:", token);
+        } else {
+          console.error("No token found in response:", response);
+          throw new Error("No authentication token received");
         }
 
         // Get phone number from admin data
-        const adminPhone = response.data.mobile || response.data.phoneNumber;
+        const adminPhone = response.data?.mobile || response.data?.phoneNumber;
         if (!adminPhone) {
+          console.error("No phone number found in response:", response);
           throw new Error("Admin phone number not found");
         }
 
@@ -60,7 +67,7 @@ export default function AdminLogin() {
         // Send OTP using existing function
         const otpResponse = await bookingAPI.sendOTP({
           phoneNumber: adminPhone,
-          userName: response.data.name || "Admin"
+          userName: response.data?.name || "Admin"
         });
 
         console.log("OTP Send Response:", otpResponse);
@@ -72,11 +79,17 @@ export default function AdminLogin() {
           throw new Error("Failed to send OTP");
         }
       } else {
+        console.error("Login failed response:", response);
         throw new Error(response?.message || "Invalid credentials");
       }
     } catch (error) {
       console.error("Login Error Details:", error);
+      console.error("Full error object:", error);
       toast.error(error?.message || "Login failed. Please check your credentials.");
+      // Clear any stored data on error
+      localStorage.removeItem("adminToken");
+      localStorage.removeItem("isAdminAuthenticated");
+      localStorage.removeItem("adminLoggedIn");
     } finally {
       setIsLoading(false);
     }
@@ -107,6 +120,13 @@ export default function AdminLogin() {
       console.log("OTP verification response:", response);
 
       if (response && response.success) {
+        // Verify token exists before proceeding
+        const token = localStorage.getItem("adminToken");
+        if (!token) {
+          throw new Error("Authentication token not found");
+        }
+        console.log("Token verified before navigation:", token);
+
         // First set all authentication data
         localStorage.setItem("isAdminAuthenticated", "true");
         localStorage.setItem("adminLoggedIn", "true");

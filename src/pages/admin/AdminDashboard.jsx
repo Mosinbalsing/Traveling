@@ -32,8 +32,17 @@ export default function AdminDashboard() {
       try {
         const isAuthenticated = localStorage.getItem("isAdminAuthenticated") === "true";
         const isLoggedIn = localStorage.getItem("adminLoggedIn") === "true";
+        const adminToken = localStorage.getItem("adminToken");
+
+        console.log("Auth Check:", {
+          isAuthenticated,
+          isLoggedIn,
+          hasToken: !!adminToken,
+          token: adminToken
+        });
 
         if (!isAuthenticated || !isLoggedIn) {
+          console.log("Authentication failed - redirecting to login");
           localStorage.removeItem("isAdminAuthenticated");
           localStorage.removeItem("adminLoggedIn");
           localStorage.removeItem("adminToken");
@@ -45,7 +54,8 @@ export default function AdminDashboard() {
         // Fetch dashboard data
         await Promise.all([
           fetchDashboardStats(),
-          fetchRecentUsers(),
+          getUsers(),
+          fetchPastBookings(),
           fetchRecentBookings()
         ]);
       } catch (error) {
@@ -94,23 +104,279 @@ export default function AdminDashboard() {
 
   const fetchRecentBookings = async () => {
     try {
-      // TODO: Replace with actual API call
-      const mockBookings = [
-        { id: 1, userName: "John Doe", travelDate: "2024-03-20", from: "Airport", to: "City Center", status: "upcoming" },
-        { id: 2, userName: "Jane Smith", travelDate: "2024-03-21", from: "Hotel", to: "Mall", status: "upcoming" },
-        { id: 3, userName: "Mike Johnson", travelDate: "2024-03-19", from: "Station", to: "Airport", status: "upcoming" },
-      ];
-      
-      const mockPastBookings = [
-        { id: 4, userName: "Alice Brown", travelDate: "2024-03-10", from: "Mall", to: "Hotel", status: "completed" },
-        { id: 5, userName: "Bob Wilson", travelDate: "2024-03-09", from: "Airport", to: "Hotel", status: "completed" },
-        { id: 6, userName: "Carol White", travelDate: "2024-03-08", from: "Hotel", to: "Station", status: "completed" },
-      ];
+      const token = localStorage.getItem("adminToken");
+      console.log("Fetching bookings with token:", token ? "Token exists" : "No token");
 
-      setUpcomingBookings(mockBookings);
-      setPastBookings(mockPastBookings);
+      if (!token) {
+        throw new Error("No authentication token found");
+      }
+
+      console.log("Making API request to:", "http://localhost:3000/api/admin/bookings");
+      const response = await fetch("http://localhost:3000/api/admin/bookings", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      console.log("API Response Status:", response.status);
+      console.log("API Response Headers:", Object.fromEntries(response.headers.entries()));
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        console.error("API Error Response:", errorData);
+        throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      console.log("Raw API Response Data:", data);
+      
+      // Transform the data to match the expected format with formatted dates
+      const formattedBookings = data.data.map(booking => ({
+        id: booking.booking_id,
+        userName: booking.user_name || "User",
+        travelDate: formatDate(booking.travel_date),
+        from: booking.pickup_location,
+        to: booking.drop_location,
+        status: booking.status,
+        vehicleType: booking.vehicle_type,
+        numberOfPassengers: booking.number_of_passengers,
+        bookingDate: formatDate(booking.booking_date)
+      }));
+
+      console.log("Final Formatted Bookings:", formattedBookings);
+
+      // Filter bookings into upcoming and past
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      const upcomingBookings = formattedBookings.filter(booking => {
+        const bookingDate = new Date(booking.travelDate);
+        return bookingDate >= today && booking.status !== "completed";
+      });
+
+      const pastBookings = formattedBookings.filter(booking => {
+        const bookingDate = new Date(booking.travelDate);
+        return bookingDate < today || booking.status === "completed";
+      });
+
+      setUpcomingBookings(upcomingBookings);
+      setPastBookings(pastBookings);
+
+      // Update dashboard stats
+      setStats({
+        totalUsers: data.data.length > 0 ? data.data[0].total_users || 0 : 0,
+        totalBookings: formattedBookings.length,
+        upcomingBookings: upcomingBookings.length,
+        pastBookings: pastBookings.length
+      });
     } catch (error) {
       console.error("Error fetching bookings:", error);
+      console.error("Error details:", {
+        message: error.message,
+        stack: error.stack,
+        name: error.name
+      });
+      toast.error(error.message || "Failed to load bookings");
+      setUpcomingBookings([]);
+      setPastBookings([]);
+    }
+  };
+
+  const formatDate = (dateString) => {
+    try {
+      const date = new Date(dateString);
+      const day = date.getDate().toString().padStart(2, '0');
+      const month = (date.getMonth() + 1).toString().padStart(2, '0');
+      const year = date.getFullYear();
+      return `${day}/${month}/${year}`;
+    } catch (error) {
+      console.error("Error formatting date:", error);
+      return dateString; // Return original string if formatting fails
+    }
+  };
+
+  const fetchPastBookings = async () => {
+    try {
+      const token = localStorage.getItem("adminToken");
+      console.log("Fetching past bookings with token:", token ? "Token exists" : "No token");
+
+      if (!token) {
+        throw new Error("No authentication token found");
+      }
+
+      console.log("Making API request to:", "http://localhost:3000/api/admin/pastbookings");
+      const response = await fetch("http://localhost:3000/api/admin/pastbookings", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      console.log("API Response Status:", response.status);
+      console.log("API Response Headers:", Object.fromEntries(response.headers.entries()));
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        console.error("API Error Response:", errorData);
+        throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      console.log("Raw API Response Data:", data);
+      
+      if (!data.success) {
+        throw new Error("Failed to fetch past bookings");
+      }
+
+      // Transform the data to match the expected format with formatted dates
+      const formattedBookings = data.data.map(booking => ({
+        id: booking.booking_id,
+        userName: booking.user_name || "User",
+        travelDate: formatDate(booking.travel_date),
+        from: booking.pickup_location,
+        to: booking.drop_location,
+        status: booking.status,
+        vehicleType: booking.vehicle_type,
+        numberOfPassengers: booking.number_of_passengers,
+        bookingDate: formatDate(booking.booking_date),
+        userEmail: booking.user_email,
+        userMobile: booking.user_mobile
+      }));
+
+      console.log("Final Formatted Past Bookings:", formattedBookings);
+
+      // Set past bookings directly since we're already fetching past bookings
+      setPastBookings(formattedBookings);
+
+      // Update dashboard stats for past bookings
+      setStats(prevStats => ({
+        ...prevStats,
+        pastBookings: data.count || formattedBookings.length
+      }));
+
+    } catch (error) {
+      console.error("Error fetching past bookings:", error);
+      console.error("Error details:", {
+        message: error.message,
+        stack: error.stack,
+        name: error.name
+      });
+      toast.error(error.message || "Failed to load past bookings");
+      setPastBookings([]);
+    }
+  };
+
+  const getUsers = async () => {
+    try {
+      const token = localStorage.getItem("adminToken");
+      console.log("Fetching users with token:", token ? "Token exists" : "No token");
+
+      if (!token) {
+        throw new Error("No authentication token found");
+      }
+
+      console.log("Making API request to:", "http://localhost:3000/api/admin/users");
+      const response = await fetch("http://localhost:3000/api/admin/users", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      console.log("API Response: from admin dashboard get users", response);
+      console.log("API Response Status:", response.status);
+      console.log("API Response Headers:", Object.fromEntries(response.headers.entries()));
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        console.error("API Error Response:", errorData);
+        throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      console.log("Raw API Response Data:", data);
+      
+      // Check if data.users exists, if not use the data directly
+      const users = data.users || data;
+      console.log("Processed Users Data:", users);
+      
+      // Transform the data to match the expected format
+      const formattedUsers = users.data.map(user => ({
+        user_id: user.id,
+        name: user.name,
+        email: user.email,
+        mobile: user.mobile,
+      }));
+
+      console.log("Final Formatted Users:", formattedUsers);
+      setRecentUsers(formattedUsers);
+    } catch (error) {
+      console.error("Error fetching users:", error);
+      console.error("Error details:", {
+        message: error.message,
+        stack: error.stack,
+        name: error.name
+      });
+      toast.error(error.message || "Failed to load users");
+      setRecentUsers([]);
+    }
+  };
+  const getBookings = async () => {
+    try {
+      const token = localStorage.getItem("adminToken");
+      console.log("Fetching users with token:", token ? "Token exists" : "No token");
+
+      if (!token) {
+        throw new Error("No authentication token found");
+      }
+
+      console.log("Making API request to:", "http://localhost:3000/api/admin/bookings");
+      const response = await fetch("http://localhost:3000/api/admin/bookings", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      console.log("API Response: from admin dashboard get bookings", response);
+      console.log("API Response Status:", response.status);
+      console.log("API Response Headers:", Object.fromEntries(response.headers.entries()));
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        console.error("API Error Response:", errorData);
+        throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      console.log("Raw API Response Data:", data);
+      
+      // Check if data.users exists, if not use the data directly
+      const users = data.users || data;
+      console.log("Processed Users Data:", users);
+      
+      // Transform the data to match the expected format
+      const formattedUsers = users.data.map(user => ({
+        user_id: user.id,
+        name: user.name,
+        email: user.email,
+        mobile: user.mobile,
+      }));
+
+      console.log("Final Formatted Users:", formattedUsers);
+      setRecentUsers(formattedUsers);
+    } catch (error) {
+      console.error("Error fetching users:", error);
+      console.error("Error details:", {
+        message: error.message,
+        stack: error.stack,
+        name: error.name
+      });
+      toast.error(error.message || "Failed to load users");
+      setRecentUsers([]);
     }
   };
 
@@ -216,15 +482,15 @@ export default function AdminDashboard() {
                   <TableRow>
                     <TableHead>Name</TableHead>
                     <TableHead>Email</TableHead>
-                    <TableHead>Joined Date</TableHead>
+                    <TableHead>Mobile</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {recentUsers.map((user) => (
-                    <TableRow key={user.id}>
+                    <TableRow key={user.user_id}>
                       <TableCell>{user.name}</TableCell>
                       <TableCell className="hidden sm:table-cell">{user.email}</TableCell>
-                      <TableCell>{user.joinedDate}</TableCell>
+                      <TableCell>{user.mobile}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
@@ -244,9 +510,10 @@ export default function AdminDashboard() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>User</TableHead>
+                    <TableHead>User Name</TableHead>
                     <TableHead>Date</TableHead>
                     <TableHead className="hidden sm:table-cell">Route</TableHead>
+                    <TableHead>Status</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -255,6 +522,15 @@ export default function AdminDashboard() {
                       <TableCell>{booking.userName}</TableCell>
                       <TableCell>{booking.travelDate}</TableCell>
                       <TableCell className="hidden sm:table-cell">{booking.from} → {booking.to}</TableCell>
+                      <TableCell>
+                        <span className={`px-2 py-1 rounded-full text-sm ${
+                          booking.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                          booking.status === 'confirmed' ? 'bg-green-100 text-green-800' :
+                          'bg-gray-100 text-gray-800'
+                        }`}>
+                          {booking.status}
+                        </span>
+                      </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
@@ -279,6 +555,7 @@ export default function AdminDashboard() {
                     <TableHead className="hidden sm:table-cell">From</TableHead>
                     <TableHead className="hidden sm:table-cell">To</TableHead>
                     <TableHead>Status</TableHead>
+                    <TableHead className="hidden sm:table-cell">Vehicle Type</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -289,10 +566,15 @@ export default function AdminDashboard() {
                       <TableCell className="hidden sm:table-cell">{booking.from}</TableCell>
                       <TableCell className="hidden sm:table-cell">{booking.to}</TableCell>
                       <TableCell>
-                        <span className="px-2 py-1 rounded-full text-sm bg-gray-100 text-gray-800">
+                        <span className={`px-2 py-1 rounded-full text-sm ${
+                          booking.status === 'completed' ? 'bg-green-100 text-green-800' :
+                          booking.status === 'cancelled' ? 'bg-red-100 text-red-800' :
+                          'bg-gray-100 text-gray-800'
+                        }`}>
                           {booking.status}
                         </span>
                       </TableCell>
+                      <TableCell className="hidden sm:table-cell">{booking.vehicleType}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
