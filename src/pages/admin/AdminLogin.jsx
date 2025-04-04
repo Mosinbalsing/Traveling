@@ -43,12 +43,19 @@ export default function AdminLogin() {
       console.log("Admin login response:", response);
 
       if (response && response.success) {
-        // Check for token in different possible locations in the response
         const token = response.token || response.data?.token || response.data?.accessToken;
         
         if (token) {
           localStorage.setItem("adminToken", token);
-          console.log("Token stored in localStorage:", token);
+          
+          // Store admin email
+          const adminEmail = response.data?.email || response.email;
+          if (!adminEmail) {
+            throw new Error("Admin email not found in response");
+          }
+          localStorage.setItem("adminEmail", adminEmail);
+          
+          console.log("Admin email stored:", adminEmail);
         } else {
           console.error("No token found in response:", response);
           throw new Error("No authentication token received");

@@ -305,19 +305,57 @@ export default function Users() {
   };
 
   const handleDeleteUser = async (user) => {
-    if (
-      window.confirm(
-        `Are you sure you want to delete ${user.name}? This will also cancel their active bookings.`
-      )
-    ) {
-      try {
-        // TODO: Replace with actual API call
-        // Mock deletion
-        setUsers(users.filter((u) => u.id !== user.id));
-        toast.success("User deleted successfully");
-      } catch (error) {
-        console.error("Error deleting user:", error);
-        toast.error("Failed to delete user");
+    try {
+      // Get admin email from localStorage
+      const adminEmail = localStorage.getItem("adminEmail");
+      if (!adminEmail) {
+        toast.error("Admin session expired. Please login again.");
+        navigate("/admin/login");
+        return;
+      }
+
+      // Get delete reason from user
+      const reason = window.prompt("Please enter reason for deletion:");
+      if (!reason) {
+        toast.error("Reason is required for deletion");
+        return;
+      }
+
+      const token = localStorage.getItem("adminToken");
+      if (!token) {
+        toast.error("Session expired. Please login again.");
+        navigate("/admin/login");
+        return;
+      }
+
+      // Make the delete API call
+      const response = await fetch(`http://localhost:3000/api/admin/users/${user.id}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          reason: reason,
+          adminEmail: adminEmail
+        })
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to delete user');
+      }
+
+      // Update the UI
+      setUsers(users.filter((u) => u.id !== user.id));
+      toast.success("User deleted successfully");
+    } catch (error) {
+      console.error("Error deleting user:", error);
+      if (error.message?.includes('authentication') || error.message?.includes('token')) {
+        toast.error("Session expired. Please login again.");
+        navigate("/admin/login");
+      } else {
+        toast.error(error.message || "Failed to delete user");
       }
     }
   };
