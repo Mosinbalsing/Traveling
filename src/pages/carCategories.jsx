@@ -334,7 +334,10 @@ export default function CarRental() {
   };
 
   const handleBookNow = (car) => {
-    setSelectedCar(car);
+    setSelectedCar({
+      ...car,
+      price: car.price // This will now be the price from the API
+    });
     setIsMobileDialogOpen(true);
   };
 
@@ -519,20 +522,20 @@ export default function CarRental() {
 
             return (
               <Card key={index} className="overflow-hidden hover:shadow-lg transition-shadow">
-              <CardContent className="p-4 lg:p-6">
+                <CardContent className="p-4 lg:p-6">
                   <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between">
                     <div className="flex flex-col sm:flex-row sm:items-start gap-4 sm:gap-6">
-                    <div className="relative h-48 w-full sm:w-48 shrink-0 overflow-hidden rounded-lg">
-                      <img
+                      <div className="relative h-48 w-full sm:w-48 shrink-0 overflow-hidden rounded-lg">
+                        <img
                           src={matchedCar.image}
                           alt={matchedCar.type}
                           className="object-contain w-full h-full"
-                      />
-                    </div>
+                        />
+                      </div>
                       <div className="space-y-4">
                         <div>
                           <h3 className="text-xl lg:text-2xl font-bold">{matchedCar.type}</h3>
-                      <p className="text-sm lg:text-base text-gray-600">
+                          <p className="text-sm lg:text-base text-gray-600">
                             {matchedCar.seating} | {matchedCar.ac ? "AC" : "Non-AC"}
                           </p>
                         </div>
@@ -548,24 +551,27 @@ export default function CarRental() {
                             ))}
                           </ul>
                         </div>
+                        <p className="text-sm text-green-600">
+                          {taxi.message}
+                        </p>
                       </div>
                     </div>
 
-                  <div className="mt-4 sm:mt-0 flex items-center justify-between sm:flex-col sm:items-end gap-4">
+                    <div className="mt-4 sm:mt-0 flex items-center justify-between sm:flex-col sm:items-end gap-4">
                       <div className="text-right">
                         <div className="text-sm text-gray-600">Starting from</div>
-                        <div className="text-xl lg:text-2xl font-bold">₹{matchedCar.price?.toLocaleString()}</div>
-                    <Button
-                      className="bg-[#76B82A] hover:bg-[#5a8c20] text-sm lg:text-base"
-                          onClick={() => handleBookNow(matchedCar)}
-                    >
-                      Book Now
-                    </Button>
+                        <div className="text-xl lg:text-2xl font-bold">₹{taxi.price?.toLocaleString()}</div>
+                        <Button
+                          className="bg-[#76B82A] hover:bg-[#5a8c20] text-sm lg:text-base"
+                          onClick={() => handleBookNow({...matchedCar, price: taxi.price})}
+                        >
+                          Book Now
+                        </Button>
                       </div>
+                    </div>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
             );
           })}
         </div>
