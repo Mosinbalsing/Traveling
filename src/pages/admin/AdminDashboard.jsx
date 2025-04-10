@@ -14,9 +14,32 @@ import {
 import { Button } from "@/components/ui/button";
 import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement } from 'chart.js';
 import { Pie, Bar } from 'react-chartjs-2';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  flexRender,
+  getCoreRowModel,
+  useReactTable,
+  getSortedRowModel,
+  getFilteredRowModel,
+} from "@tanstack/react-table";
+import { Input } from "@/components/ui/input";
+import { ArrowUpDown } from "lucide-react";
 
 // Register ChartJS components
-ChartJS.register(ArcElement, CategoryScale, LinearScale, BarElement, Tooltip, Legend);
+ChartJS.register(
+  ArcElement, 
+  CategoryScale, 
+  LinearScale, 
+  BarElement, 
+  Tooltip, 
+  Legend
+);
 
 export default function AdminDashboard() {
   const navigate = useNavigate();
@@ -32,6 +55,132 @@ export default function AdminDashboard() {
   const [upcomingBookings, setUpcomingBookings] = useState([]);
   const [pastBookings, setPastBookings] = useState([]);
   const [userTrends, setUserTrends] = useState([]);
+  const [userHistogramFilter, setUserHistogramFilter] = useState("month"); // Default to month view
+  const ITEMS_PER_PAGE = 5;
+  const [globalFilter, setGlobalFilter] = useState("");
+
+  const columns = [
+    {
+      accessorKey: "name",
+      header: ({ column }) => {
+        return (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          >
+            Name
+            <ArrowUpDown className="ml-2 h-4 w-4" />
+          </Button>
+        )
+      },
+    },
+    {
+      accessorKey: "email",
+      header: ({ column }) => {
+        return (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          >
+            Email
+            <ArrowUpDown className="ml-2 h-4 w-4" />
+          </Button>
+        )
+      },
+    },
+    {
+      accessorKey: "mobile",
+      header: ({ column }) => {
+        return (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          >
+            Mobile
+            <ArrowUpDown className="ml-2 h-4 w-4" />
+          </Button>
+        )
+      },
+    },
+  ];
+
+  const table = useReactTable({
+    data: recentUsers,
+    columns,
+    getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
+    state: {
+      globalFilter,
+    },
+    onGlobalFilterChange: setGlobalFilter,
+  });
+
+  const bookingColumns = [
+    {
+      accessorKey: "userName",
+      header: ({ column }) => {
+        return (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          >
+            User Name
+            <ArrowUpDown className="ml-2 h-4 w-4" />
+          </Button>
+        )
+      },
+    },
+    {
+      accessorKey: "travelDate",
+      header: ({ column }) => {
+        return (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          >
+            Date
+            <ArrowUpDown className="ml-2 h-4 w-4" />
+          </Button>
+        )
+      },
+    },
+    {
+      accessorKey: "from",
+      header: "From",
+      cell: ({ row }) => <span className="hidden sm:table-cell">{row.original.from}</span>,
+    },
+    {
+      accessorKey: "to",
+      header: "To",
+      cell: ({ row }) => <span className="hidden sm:table-cell">{row.original.to}</span>,
+    },
+    {
+      accessorKey: "status",
+      header: "Status",
+      cell: ({ row }) => (
+        <span className={`px-2 py-1 rounded-full text-sm ${
+          row.original.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+          row.original.status === 'confirmed' ? 'bg-green-100 text-green-800' :
+          'bg-gray-100 text-gray-800'
+        }`}>
+          {row.original.status}
+        </span>
+      ),
+    },
+  ];
+
+  const bookingsTable = useReactTable({
+    data: upcomingBookings,
+    columns: bookingColumns,
+    getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
+    state: {
+      globalFilter,
+    },
+    onGlobalFilterChange: setGlobalFilter,
+  });
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -299,6 +448,209 @@ export default function AdminDashboard() {
     }
   };
 
+  const getUserChartData = () => {
+    if (!Array.isArray(recentUsers)) return { labels: [], datasets: [] };
+
+    const today = new Date();
+    let filteredUsers = [];
+    let filteredBookings = [];
+    let labels = [];
+    let userData = {};
+    let bookingData = {};
+
+    // Combine all bookings
+    const allBookings = [...upcomingBookings, ...pastBookings];
+
+    switch (userHistogramFilter) {
+      case "30days": {
+        const thirtyDaysAgo = new Date();
+        thirtyDaysAgo.setDate(today.getDate() - 30);
+
+        // Filter users
+        filteredUsers = recentUsers.filter(user => {
+          const userDate = new Date(user.createdAt);
+          return userDate >= thirtyDaysAgo && userDate <= today;
+        });
+
+        // Filter bookings
+        filteredBookings = allBookings.filter(booking => {
+          const bookingDate = new Date(booking.bookingDate.split('/').reverse().join('-'));
+          return bookingDate >= thirtyDaysAgo && bookingDate <= today;
+        });
+
+        // Create labels for all 30 days
+        for (let i = 29; i >= 0; i--) {
+          const date = new Date();
+          date.setDate(today.getDate() - i);
+          const dateStr = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+          labels.push(dateStr);
+          userData[dateStr] = 0;
+          bookingData[dateStr] = 0;
+        }
+
+        // Group users by date
+        filteredUsers.forEach(user => {
+          const date = new Date(user.createdAt);
+          const dateStr = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+          userData[dateStr] = (userData[dateStr] || 0) + 1;
+        });
+
+        // Group bookings by date
+        filteredBookings.forEach(booking => {
+          const date = new Date(booking.bookingDate.split('/').reverse().join('-'));
+          const dateStr = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+          bookingData[dateStr] = (bookingData[dateStr] || 0) + 1;
+        });
+        break;
+      }
+
+      case "week": {
+        const weekAgo = new Date();
+        weekAgo.setDate(today.getDate() - 7);
+
+        // Filter users
+        filteredUsers = recentUsers.filter(user => {
+          const userDate = new Date(user.createdAt);
+          return userDate >= weekAgo && userDate <= today;
+        });
+
+        // Filter bookings
+        filteredBookings = allBookings.filter(booking => {
+          const bookingDate = new Date(booking.bookingDate.split('/').reverse().join('-'));
+          return bookingDate >= weekAgo && bookingDate <= today;
+        });
+
+        // Create labels for all days of the week
+        for (let i = 6; i >= 0; i--) {
+          const date = new Date();
+          date.setDate(today.getDate() - i);
+          const dateStr = date.toLocaleDateString('en-US', { weekday: 'short' });
+          labels.push(dateStr);
+          userData[dateStr] = 0;
+          bookingData[dateStr] = 0;
+        }
+
+        // Group users by day
+        filteredUsers.forEach(user => {
+          const date = new Date(user.createdAt);
+          const dateStr = date.toLocaleDateString('en-US', { weekday: 'short' });
+          userData[dateStr] = (userData[dateStr] || 0) + 1;
+        });
+
+        // Group bookings by day
+        filteredBookings.forEach(booking => {
+          const date = new Date(booking.bookingDate.split('/').reverse().join('-'));
+          const dateStr = date.toLocaleDateString('en-US', { weekday: 'short' });
+          bookingData[dateStr] = (bookingData[dateStr] || 0) + 1;
+        });
+        break;
+      }
+
+      case "month": {
+        // Filter for current month
+        filteredUsers = recentUsers.filter(user => {
+          const userDate = new Date(user.createdAt);
+          return userDate.getMonth() === today.getMonth() &&
+                 userDate.getFullYear() === today.getFullYear();
+        });
+
+        filteredBookings = allBookings.filter(booking => {
+          const bookingDate = new Date(booking.bookingDate.split('/').reverse().join('-'));
+          return bookingDate.getMonth() === today.getMonth() &&
+                 bookingDate.getFullYear() === today.getFullYear();
+        });
+
+        // Create labels for all days in current month
+        const daysInMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
+        for (let i = 1; i <= daysInMonth; i++) {
+          labels.push(i.toString());
+          userData[i.toString()] = 0;
+          bookingData[i.toString()] = 0;
+        }
+
+        // Group users by day of month
+        filteredUsers.forEach(user => {
+          const date = new Date(user.createdAt);
+          const dateStr = date.getDate().toString();
+          userData[dateStr] = (userData[dateStr] || 0) + 1;
+        });
+
+        // Group bookings by day of month
+        filteredBookings.forEach(booking => {
+          const date = new Date(booking.bookingDate.split('/').reverse().join('-'));
+          const dateStr = date.getDate().toString();
+          bookingData[dateStr] = (bookingData[dateStr] || 0) + 1;
+        });
+        break;
+      }
+    }
+
+    return {
+      labels: labels,
+      datasets: [
+        {
+          label: 'New Users',
+          data: labels.map(label => userData[label] || 0),
+          backgroundColor: 'rgba(59, 130, 246, 0.6)',
+          borderColor: 'rgba(59, 130, 246, 1)',
+          borderWidth: 1,
+          barPercentage: 0.8,
+          categoryPercentage: 0.4,
+        },
+        {
+          label: 'Bookings',
+          data: labels.map(label => bookingData[label] || 0),
+          backgroundColor: 'rgba(34, 197, 94, 0.6)',
+          borderColor: 'rgba(34, 197, 94, 1)',
+          borderWidth: 1,
+          barPercentage: 0.8,
+          categoryPercentage: 0.4,
+        }
+      ]
+    };
+  };
+
+  const chartOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    scales: {
+      y: {
+        beginAtZero: true,
+        ticks: {
+          stepSize: 1,
+        },
+        title: {
+          display: true,
+          text: 'Count'
+        }
+      },
+      x: {
+        grid: {
+          display: false
+        },
+        title: {
+          display: true,
+          text: userHistogramFilter === "month" ? 'Day of Month' : 
+                userHistogramFilter === "week" ? 'Day of Week' : 'Date'
+        }
+      }
+    },
+    plugins: {
+      legend: {
+        display: true,
+        position: 'top',
+      },
+      title: {
+        display: true,
+        text: `Users & Bookings Trend (${
+          userHistogramFilter === "30days" ? "Last 30 Days" :
+          userHistogramFilter === "week" ? "This Week" :
+          "This Month"
+        })`
+      }
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -441,57 +793,23 @@ export default function AdminDashboard() {
 
           {/* Users Histogram */}
           <div className="bg-white rounded-lg shadow-sm p-4 md:p-6">
-            <h2 className="text-lg font-semibold mb-4">User Registration Trend</h2>
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-lg font-semibold">User Registration Trend</h2>
+              <Select value={userHistogramFilter} onValueChange={setUserHistogramFilter}>
+                <SelectTrigger className="w-[180px] bg-white">
+                  <SelectValue placeholder="Select time range" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="30days">Last 30 Days</SelectItem>
+                  <SelectItem value="week">This Week</SelectItem>
+                  <SelectItem value="month">This Month</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
             <div className="h-[300px]">
               <Bar
-                data={{
-                  labels: userTrends.map(trend => trend.month),
-                  datasets: [
-                    {
-                      label: 'Users per Month',
-                      data: userTrends.map(trend => trend.count),
-                      backgroundColor: 'rgba(59, 130, 246, 0.6)',
-                      borderColor: 'rgba(59, 130, 246, 1)',
-                      borderWidth: 1,
-                      barPercentage: 1,
-                      categoryPercentage: 1,
-                    },
-                  ],
-                }}
-                options={{
-                  responsive: true,
-                  maintainAspectRatio: false,
-                  scales: {
-                    y: {
-                      beginAtZero: true,
-                      ticks: {
-                        stepSize: 1,
-                      },
-                      title: {
-                        display: true,
-                        text: 'Number of Users'
-                      }
-                    },
-                    x: {
-                      title: {
-                        display: true,
-                        text: 'Month'
-                      },
-                      grid: {
-                        display: false
-                      }
-                    }
-                  },
-                  plugins: {
-                    legend: {
-                      display: false
-                    },
-                    title: {
-                      display: true,
-                      text: 'User Registration Distribution by Month'
-                    }
-                  }
-                }}
+                data={getUserChartData()}
+                options={chartOptions}
               />
             </div>
           </div>
@@ -499,73 +817,129 @@ export default function AdminDashboard() {
 
         {/* Tables Grid */}
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-          {/* Recent Users */}
+          {/* Recent Users with Search and Sort */}
           <div className="bg-white rounded-lg shadow-sm p-4 md:p-6 overflow-x-auto">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-lg font-semibold">Recent Users</h2>
-              <Button variant="outline" size="sm" asChild>
-                <Link to="/admin/users">View All</Link>
-              </Button>
-            </div>
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Name</TableHead>
-                    <TableHead>Email</TableHead>
-                    <TableHead>Mobile</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {Array.isArray(recentUsers) && recentUsers.map((user) => (
-                    <TableRow key={user.id}>
-                      <TableCell>{user.name}</TableCell>
-                      <TableCell className="hidden sm:table-cell">{user.email}</TableCell>
-                      <TableCell>{user.mobile}</TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+            <div className="flex flex-col gap-4">
+              <div className="flex justify-between items-center">
+                <h2 className="text-lg font-semibold">Recent Users</h2>
+                <div className="flex items-center gap-4">
+                  <Input
+                    placeholder="Search users..."
+                    value={globalFilter ?? ""}
+                    onChange={(e) => setGlobalFilter(e.target.value)}
+                    className="max-w-sm"
+                  />
+                  <Button variant="outline" size="sm" asChild>
+                    <Link to="/admin/users">View All</Link>
+                  </Button>
+                </div>
+              </div>
+              
+              <div className="rounded-md border">
+                <Table>
+                  <TableHeader>
+                    {table.getHeaderGroups().map((headerGroup) => (
+                      <TableRow key={headerGroup.id}>
+                        {headerGroup.headers.map((header) => (
+                          <TableHead key={header.id}>
+                            {header.isPlaceholder
+                              ? null
+                              : flexRender(
+                                  header.column.columnDef.header,
+                                  header.getContext()
+                                )}
+                          </TableHead>
+                        ))}
+                      </TableRow>
+                    ))}
+                  </TableHeader>
+                  <TableBody>
+                    {table.getRowModel().rows?.length ? (
+                      table.getRowModel().rows.slice(0, ITEMS_PER_PAGE).map((row) => (
+                        <TableRow
+                          key={row.id}
+                          data-state={row.getIsSelected() && "selected"}
+                        >
+                          {row.getVisibleCells().map((cell) => (
+                            <TableCell key={cell.id}>
+                              {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                            </TableCell>
+                          ))}
+                        </TableRow>
+                      ))
+                    ) : (
+                      <TableRow>
+                        <TableCell colSpan={columns.length} className="h-24 text-center">
+                          No results.
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
             </div>
           </div>
 
-          {/* Upcoming Bookings */}
+          {/* Upcoming Bookings with Search and Sort */}
           <div className="bg-white rounded-lg shadow-sm p-4 md:p-6 overflow-x-auto">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-lg font-semibold">Upcoming Bookings</h2>
-              <Button variant="outline" size="sm" asChild>
-                <Link to="/admin/bookings">View All</Link>
-              </Button>
-            </div>
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>User Name</TableHead>
-                    <TableHead>Date</TableHead>
-                    <TableHead className="hidden sm:table-cell">Route</TableHead>
-                    <TableHead>Status</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {upcomingBookings.map((booking) => (
-                    <TableRow key={booking.id}>
-                      <TableCell>{booking.userName}</TableCell>
-                      <TableCell>{booking.travelDate}</TableCell>
-                      <TableCell className="hidden sm:table-cell">{booking.from} → {booking.to}</TableCell>
-                      <TableCell>
-                        <span className={`px-2 py-1 rounded-full text-sm ${
-                          booking.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                          booking.status === 'confirmed' ? 'bg-green-100 text-green-800' :
-                          'bg-gray-100 text-gray-800'
-                        }`}>
-                          {booking.status}
-                        </span>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+            <div className="flex flex-col gap-4">
+              <div className="flex justify-between items-center">
+                <h2 className="text-lg font-semibold">Upcoming Bookings</h2>
+                <div className="flex items-center gap-4">
+                  <Input
+                    placeholder="Search bookings..."
+                    value={globalFilter ?? ""}
+                    onChange={(e) => setGlobalFilter(e.target.value)}
+                    className="max-w-sm"
+                  />
+                  <Button variant="outline" size="sm" asChild>
+                    <Link to="/admin/bookings">View All</Link>
+                  </Button>
+                </div>
+              </div>
+              
+              <div className="rounded-md border">
+                <Table>
+                  <TableHeader>
+                    {bookingsTable.getHeaderGroups().map((headerGroup) => (
+                      <TableRow key={headerGroup.id}>
+                        {headerGroup.headers.map((header) => (
+                          <TableHead key={header.id}>
+                            {header.isPlaceholder
+                              ? null
+                              : flexRender(
+                                  header.column.columnDef.header,
+                                  header.getContext()
+                                )}
+                          </TableHead>
+                        ))}
+                      </TableRow>
+                    ))}
+                  </TableHeader>
+                  <TableBody>
+                    {bookingsTable.getRowModel().rows?.length ? (
+                      bookingsTable.getRowModel().rows.slice(0, ITEMS_PER_PAGE).map((row) => (
+                        <TableRow
+                          key={row.id}
+                          data-state={row.getIsSelected() && "selected"}
+                        >
+                          {row.getVisibleCells().map((cell) => (
+                            <TableCell key={cell.id}>
+                              {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                            </TableCell>
+                          ))}
+                        </TableRow>
+                      ))
+                    ) : (
+                      <TableRow>
+                        <TableCell colSpan={bookingColumns.length} className="h-24 text-center">
+                          No results.
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
             </div>
           </div>
 
@@ -590,24 +964,26 @@ export default function AdminDashboard() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {pastBookings.map((booking) => (
-                    <TableRow key={booking.id}>
-                      <TableCell>{booking.userName}</TableCell>
-                      <TableCell>{booking.travelDate}</TableCell>
-                      <TableCell className="hidden sm:table-cell">{booking.from}</TableCell>
-                      <TableCell className="hidden sm:table-cell">{booking.to}</TableCell>
-                      <TableCell>
-                        <span className={`px-2 py-1 rounded-full text-sm ${
-                          booking.status === 'completed' ? 'bg-green-100 text-green-800' :
-                          booking.status === 'cancelled' ? 'bg-red-100 text-red-800' :
-                          'bg-gray-100 text-gray-800'
-                        }`}>
-                          {booking.status}
-                        </span>
-                      </TableCell>
-                      <TableCell className="hidden sm:table-cell">{booking.vehicleType}</TableCell>
-                    </TableRow>
-                  ))}
+                  {pastBookings
+                    .slice(0, ITEMS_PER_PAGE)
+                    .map((booking) => (
+                      <TableRow key={booking.id}>
+                        <TableCell>{booking.userName}</TableCell>
+                        <TableCell>{booking.travelDate}</TableCell>
+                        <TableCell className="hidden sm:table-cell">{booking.from}</TableCell>
+                        <TableCell className="hidden sm:table-cell">{booking.to}</TableCell>
+                        <TableCell>
+                          <span className={`px-2 py-1 rounded-full text-sm ${
+                            booking.status === 'completed' ? 'bg-green-100 text-green-800' :
+                            booking.status === 'cancelled' ? 'bg-red-100 text-red-800' :
+                            'bg-gray-100 text-gray-800'
+                          }`}>
+                            {booking.status}
+                          </span>
+                        </TableCell>
+                        <TableCell className="hidden sm:table-cell">{booking.vehicleType}</TableCell>
+                      </TableRow>
+                    ))}
                 </TableBody>
               </Table>
             </div>
