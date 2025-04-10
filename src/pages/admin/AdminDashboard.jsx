@@ -12,6 +12,11 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
+import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement } from 'chart.js';
+import { Pie, Bar } from 'react-chartjs-2';
+
+// Register ChartJS components
+ChartJS.register(ArcElement, CategoryScale, LinearScale, BarElement, Tooltip, Legend);
 
 export default function AdminDashboard() {
   const navigate = useNavigate();
@@ -26,6 +31,7 @@ export default function AdminDashboard() {
   const [recentUsers, setRecentUsers] = useState([]);
   const [upcomingBookings, setUpcomingBookings] = useState([]);
   const [pastBookings, setPastBookings] = useState([]);
+  const [userTrends, setUserTrends] = useState([]);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -51,13 +57,12 @@ export default function AdminDashboard() {
           return;
         }
 
-        // Fetch dashboard data
-        await Promise.all([
-          fetchDashboardStats(),
-          getUsers(),
-          fetchPastBookings(),
-          fetchRecentBookings()
-        ]);
+        // Fetch data in sequence to ensure correct counts
+        await fetchDashboardStats();
+        await fetchPastBookings(); // Fetch past bookings first
+        await fetchRecentBookings(); // Then fetch recent bookings
+        await getUsers();
+
       } catch (error) {
         console.error("Auth Error:", error);
         setError(error.message);
@@ -74,14 +79,34 @@ export default function AdminDashboard() {
     checkAuth();
   }, [navigate]);
 
+  useEffect(() => {
+    if (Array.isArray(recentUsers)) {
+      // Group users by month
+      const usersByMonth = recentUsers.reduce((acc, user) => {
+        const month = new Date(user.createdAt).toLocaleDateString('en-US', { month: 'short', year: '2-digit' });
+        acc[month] = (acc[month] || 0) + 1;
+        return acc;
+      }, {});
+
+      // Convert to array format for chart
+      const trends = Object.entries(usersByMonth).map(([month, count]) => ({
+        month,
+        count
+      }));
+
+      setUserTrends(trends);
+    }
+  }, [recentUsers]);
+
   const fetchDashboardStats = async () => {
     try {
-      // TODO: Replace with actual API call
+      // Initialize stats with zeros instead of hardcoded values
       setStats({
-        totalUsers: 150,
-        totalBookings: 300,
-        upcomingBookings: 50,
-        pastBookings: 250
+        totalUsers: 0,
+        totalBookings: 0,
+        upcomingBookings: 0,
+        pastBookings: 0,
+        cancelledBookings: 0
       });
     } catch (error) {
       console.error("Error fetching stats:", error);
@@ -89,29 +114,9 @@ export default function AdminDashboard() {
     }
   };
 
-  const fetchRecentUsers = async () => {
-    try {
-      // TODO: Replace with actual API call
-      setRecentUsers([
-        { id: 1, name: "John Doe", email: "john@example.com", phone: "+1234567890", joinedDate: "2024-03-15" },
-        { id: 2, name: "Jane Smith", email: "jane@example.com", phone: "+1234567891", joinedDate: "2024-03-14" },
-        { id: 3, name: "Mike Johnson", email: "mike@example.com", phone: "+1234567892", joinedDate: "2024-03-13" },
-      ]);
-    } catch (error) {
-      console.error("Error fetching recent users:", error);
-    }
-  };
-
   const fetchRecentBookings = async () => {
     try {
       const token = localStorage.getItem("adminToken");
-      console.log("Fetching bookings with token:", token ? "Token exists" : "No token");
-
-      if (!token) {
-        throw new Error("No authentication token found");
-      }
-
-      console.log("Making API request to:", "http://localhost:3000/api/admin/bookings");
       const response = await fetch("http://localhost:3000/api/admin/bookings", {
         method: "GET",
         headers: {
@@ -120,19 +125,9 @@ export default function AdminDashboard() {
         },
       });
 
-      console.log("API Response Status:", response.status);
-      console.log("API Response Headers:", Object.fromEntries(response.headers.entries()));
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        console.error("API Error Response:", errorData);
-        throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
-      }
-
       const data = await response.json();
-      console.log("Raw API Response Data:", data);
-      
-      // Transform the data to match the expected format with formatted dates
+      console.log("Recent Bookings API Response:", data);
+
       const formattedBookings = data.data.map(booking => ({
         id: booking.booking_id,
         userName: booking.user_name || "User",
@@ -145,42 +140,28 @@ export default function AdminDashboard() {
         bookingDate: formatDate(booking.booking_date)
       }));
 
-      console.log("Final Formatted Bookings:", formattedBookings);
-
-      // Filter bookings into upcoming and past
+      // Filter bookings
       const today = new Date();
       today.setHours(0, 0, 0, 0);
 
       const upcomingBookings = formattedBookings.filter(booking => {
-        const bookingDate = new Date(booking.travelDate);
+        const bookingDate = new Date(booking.travelDate.split('/').reverse().join('-'));
         return bookingDate >= today && booking.status !== "completed";
       });
 
-      const pastBookings = formattedBookings.filter(booking => {
-        const bookingDate = new Date(booking.travelDate);
-        return bookingDate < today || booking.status === "completed";
-      });
-
       setUpcomingBookings(upcomingBookings);
-      setPastBookings(pastBookings);
 
-      // Update dashboard stats
-      setStats({
-        totalUsers: data.data.length > 0 ? data.data[0].total_users || 0 : 0,
-        totalBookings: formattedBookings.length,
+      // Update stats for upcoming bookings
+      setStats(prevStats => ({
+        ...prevStats,
         upcomingBookings: upcomingBookings.length,
-        pastBookings: pastBookings.length
-      });
+        totalBookings: upcomingBookings.length + prevStats.pastBookings
+      }));
+
     } catch (error) {
-      console.error("Error fetching bookings:", error);
-      console.error("Error details:", {
-        message: error.message,
-        stack: error.stack,
-        name: error.name
-      });
-      toast.error(error.message || "Failed to load bookings");
+      console.error("Error fetching recent bookings:", error);
+      toast.error("Failed to load recent bookings");
       setUpcomingBookings([]);
-      setPastBookings([]);
     }
   };
 
@@ -200,13 +181,8 @@ export default function AdminDashboard() {
   const fetchPastBookings = async () => {
     try {
       const token = localStorage.getItem("adminToken");
-      console.log("Fetching past bookings with token:", token ? "Token exists" : "No token");
+      console.log("Fetching past bookings...");
 
-      if (!token) {
-        throw new Error("No authentication token found");
-      }
-
-      console.log("Making API request to:", "http://localhost:3000/api/admin/pastbookings");
       const response = await fetch("http://localhost:3000/api/admin/pastbookings", {
         method: "GET",
         headers: {
@@ -215,24 +191,18 @@ export default function AdminDashboard() {
         },
       });
 
-      console.log("API Response Status:", response.status);
-      console.log("API Response Headers:", Object.fromEntries(response.headers.entries()));
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        console.error("API Error Response:", errorData);
-        throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
-      }
-
       const data = await response.json();
-      console.log("Raw API Response Data:", data);
-      
+      console.log("Past Bookings API Response:", data);
+
       if (!data.success) {
         throw new Error("Failed to fetch past bookings");
       }
 
-      // Transform the data to match the expected format with formatted dates
-      const formattedBookings = data.data.map(booking => ({
+      // Ensure we're accessing the correct data structure
+      const bookingsData = Array.isArray(data.data) ? data.data : [];
+      console.log("Past Bookings Data:", bookingsData);
+
+      const formattedBookings = bookingsData.map(booking => ({
         id: booking.booking_id,
         userName: booking.user_name || "User",
         travelDate: formatDate(booking.travel_date),
@@ -241,30 +211,32 @@ export default function AdminDashboard() {
         status: booking.status,
         vehicleType: booking.vehicle_type,
         numberOfPassengers: booking.number_of_passengers,
-        bookingDate: formatDate(booking.booking_date),
-        userEmail: booking.user_email,
-        userMobile: booking.user_mobile
+        bookingDate: formatDate(booking.booking_date)
       }));
 
-      console.log("Final Formatted Past Bookings:", formattedBookings);
-
-      // Set past bookings directly since we're already fetching past bookings
+      console.log("Formatted Past Bookings:", formattedBookings);
       setPastBookings(formattedBookings);
 
-      // Update dashboard stats for past bookings
-      setStats(prevStats => ({
-        ...prevStats,
-        pastBookings: data.count || formattedBookings.length
-      }));
+      // Update stats with the correct counts
+      setStats(prevStats => {
+        const pastCount = formattedBookings.length;
+        const cancelledCount = formattedBookings.filter(b => b.status === 'cancelled').length;
+        
+        return {
+          ...prevStats,
+          pastBookings: pastCount,
+          cancelledBookings: cancelledCount,
+          totalBookings: pastCount + prevStats.upcomingBookings
+        };
+      });
 
     } catch (error) {
       console.error("Error fetching past bookings:", error);
       console.error("Error details:", {
         message: error.message,
-        stack: error.stack,
-        name: error.name
+        stack: error.stack
       });
-      toast.error(error.message || "Failed to load past bookings");
+      toast.error("Failed to load past bookings");
       setPastBookings([]);
     }
   };
@@ -272,13 +244,6 @@ export default function AdminDashboard() {
   const getUsers = async () => {
     try {
       const token = localStorage.getItem("adminToken");
-      console.log("Fetching users with token:", token ? "Token exists" : "No token");
-
-      if (!token) {
-        throw new Error("No authentication token found");
-      }
-
-      console.log("Making API request to:", "http://localhost:3000/api/admin/users");
       const response = await fetch("http://localhost:3000/api/admin/users", {
         method: "GET",
         headers: {
@@ -286,96 +251,50 @@ export default function AdminDashboard() {
           Authorization: `Bearer ${token}`,
         },
       });
-      console.log("API Response: from admin dashboard get users", response);
-      console.log("API Response Status:", response.status);
-      console.log("API Response Headers:", Object.fromEntries(response.headers.entries()));
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        console.error("API Error Response:", errorData);
-        throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
-      }
 
       const data = await response.json();
-      console.log("Raw API Response Data:", data);
-      
-      // Check if data.users exists, if not use the data directly
       const users = data.users || data;
-      console.log("Processed Users Data:", users);
       
-      // Transform the data to match the expected format
       const formattedUsers = users.data.map(user => ({
-        user_id: user.id,
+        id: user.id,
         name: user.name,
         email: user.email,
         mobile: user.mobile,
+        createdAt: user.created_at || new Date().toISOString(),
       }));
 
-      console.log("Final Formatted Users:", formattedUsers);
       setRecentUsers(formattedUsers);
-    } catch (error) {
-      console.error("Error fetching users:", error);
-      console.error("Error details:", {
-        message: error.message,
-        stack: error.stack,
-        name: error.name
-      });
-      toast.error(error.message || "Failed to load users");
-      setRecentUsers([]);
-    }
-  };
-  const getBookings = async () => {
-    try {
-      const token = localStorage.getItem("adminToken");
-      console.log("Fetching users with token:", token ? "Token exists" : "No token");
 
-      if (!token) {
-        throw new Error("No authentication token found");
-      }
-
-      console.log("Making API request to:", "http://localhost:3000/api/admin/bookings");
-      const response = await fetch("http://localhost:3000/api/admin/bookings", {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      console.log("API Response: from admin dashboard get bookings", response);
-      console.log("API Response Status:", response.status);
-      console.log("API Response Headers:", Object.fromEntries(response.headers.entries()));
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        console.error("API Error Response:", errorData);
-        throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.json();
-      console.log("Raw API Response Data:", data);
-      
-      // Check if data.users exists, if not use the data directly
-      const users = data.users || data;
-      console.log("Processed Users Data:", users);
-      
-      // Transform the data to match the expected format
-      const formattedUsers = users.data.map(user => ({
-        user_id: user.id,
-        name: user.name,
-        email: user.email,
-        mobile: user.mobile,
+      // Update total users count
+      setStats(prevStats => ({
+        ...prevStats,
+        totalUsers: formattedUsers.length
       }));
 
-      console.log("Final Formatted Users:", formattedUsers);
-      setRecentUsers(formattedUsers);
+      // Process users for histogram
+      const usersByMonth = formattedUsers.reduce((acc, user) => {
+        const date = new Date(user.createdAt);
+        const monthYear = date.toLocaleString('en-US', { month: 'short', year: '2-digit' });
+        acc[monthYear] = (acc[monthYear] || 0) + 1;
+        return acc;
+      }, {});
+
+      // Sort by date and convert to array
+      const sortedMonths = Object.keys(usersByMonth).sort((a, b) => {
+        const dateA = new Date(a);
+        const dateB = new Date(b);
+        return dateA - dateB;
+      });
+
+      const trends = sortedMonths.map(month => ({
+        month,
+        count: usersByMonth[month]
+      }));
+
+      setUserTrends(trends);
+
     } catch (error) {
       console.error("Error fetching users:", error);
-      console.error("Error details:", {
-        message: error.message,
-        stack: error.stack,
-        name: error.name
-      });
-      toast.error(error.message || "Failed to load users");
       setRecentUsers([]);
     }
   };
@@ -466,6 +385,118 @@ export default function AdminDashboard() {
           </div>
         </div>
 
+        {/* Booking Status Pie Chart */}
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 mb-6">
+          {/* Booking Status Pie Chart */}
+          <div className="bg-white rounded-lg shadow-sm p-4 md:p-6">
+            <h2 className="text-lg font-semibold mb-4">Booking Distribution</h2>
+            <div className="h-[300px] flex items-center justify-center">
+              <Pie
+                data={{
+                  labels: ['Upcoming', 'Past', 'Cancelled'],
+                  datasets: [
+                    {
+                      data: [
+                        stats.upcomingBookings,
+                        stats.pastBookings,
+                        stats.cancelledBookings || 0
+                      ],
+                      backgroundColor: [
+                        'rgba(34, 197, 94, 0.6)', // green
+                        'rgba(59, 130, 246, 0.6)', // blue
+                        'rgba(239, 68, 68, 0.6)', // red
+                      ],
+                      borderColor: [
+                        'rgba(34, 197, 94, 1)',
+                        'rgba(59, 130, 246, 1)',
+                        'rgba(239, 68, 68, 1)',
+                      ],
+                      borderWidth: 1,
+                    },
+                  ],
+                }}
+                options={{
+                  responsive: true,
+                  maintainAspectRatio: false,
+                  plugins: {
+                    legend: {
+                      position: 'bottom',
+                    },
+                    tooltip: {
+                      callbacks: {
+                        label: function(context) {
+                          const label = context.label || '';
+                          const value = context.raw || 0;
+                          const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                          const percentage = ((value / total) * 100).toFixed(1);
+                          return `${label}: ${value} (${percentage}%)`;
+                        }
+                      }
+                    }
+                  }
+                }}
+              />
+            </div>
+          </div>
+
+          {/* Users Histogram */}
+          <div className="bg-white rounded-lg shadow-sm p-4 md:p-6">
+            <h2 className="text-lg font-semibold mb-4">User Registration Trend</h2>
+            <div className="h-[300px]">
+              <Bar
+                data={{
+                  labels: userTrends.map(trend => trend.month),
+                  datasets: [
+                    {
+                      label: 'Users per Month',
+                      data: userTrends.map(trend => trend.count),
+                      backgroundColor: 'rgba(59, 130, 246, 0.6)',
+                      borderColor: 'rgba(59, 130, 246, 1)',
+                      borderWidth: 1,
+                      barPercentage: 1,
+                      categoryPercentage: 1,
+                    },
+                  ],
+                }}
+                options={{
+                  responsive: true,
+                  maintainAspectRatio: false,
+                  scales: {
+                    y: {
+                      beginAtZero: true,
+                      ticks: {
+                        stepSize: 1,
+                      },
+                      title: {
+                        display: true,
+                        text: 'Number of Users'
+                      }
+                    },
+                    x: {
+                      title: {
+                        display: true,
+                        text: 'Month'
+                      },
+                      grid: {
+                        display: false
+                      }
+                    }
+                  },
+                  plugins: {
+                    legend: {
+                      display: false
+                    },
+                    title: {
+                      display: true,
+                      text: 'User Registration Distribution by Month'
+                    }
+                  }
+                }}
+              />
+            </div>
+          </div>
+        </div>
+
         {/* Tables Grid */}
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
           {/* Recent Users */}
@@ -486,8 +517,8 @@ export default function AdminDashboard() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {recentUsers.map((user) => (
-                    <TableRow key={user.user_id}>
+                  {Array.isArray(recentUsers) && recentUsers.map((user) => (
+                    <TableRow key={user.id}>
                       <TableCell>{user.name}</TableCell>
                       <TableCell className="hidden sm:table-cell">{user.email}</TableCell>
                       <TableCell>{user.mobile}</TableCell>

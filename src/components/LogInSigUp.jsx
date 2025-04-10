@@ -190,7 +190,7 @@ export default function SlidingAuthForm() {
   // Update signup handler similarly
   const handleSignup = async (e) => {
     e.preventDefault();
-    
+
     try {
       const response = await authAPI.signup(formValues);
       
@@ -340,7 +340,7 @@ export default function SlidingAuthForm() {
                   )}
 
                   {isLogin ? (
-                    <div className="w-full sm:w-80 max-w-md mx-auto">
+                  <div className="w-full sm:w-80 max-w-md mx-auto">
                       <Label htmlFor="email">Email</Label>
                       <input
                         className="w-full p-2 border-2 rounded-md bg-background outline-none focus-within:border-blue-700 transition"
@@ -359,38 +359,38 @@ export default function SlidingAuthForm() {
                   ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <Label htmlFor="email">Email</Label>
-                        <input
-                          className="w-full p-2 border-2 rounded-md bg-background outline-none focus-within:border-blue-700 transition"
-                          value={formValues.email}
-                          id="email"
-                          name="email"
-                          type="email"
-                          placeholder="m@example.com"
-                          onChange={handleChange}
-                          disabled={loading}
-                        />
-                        {errors.email && (
-                          <p className="text-red-500 text-sm">{errors.email}</p>
-                        )}
-                      </div>
+                    <Label htmlFor="email">Email</Label>
+                    <input
+                      className="w-full p-2 border-2 rounded-md bg-background outline-none focus-within:border-blue-700 transition"
+                      value={formValues.email}
+                      id="email"
+                      name="email"
+                      type="email"
+                      placeholder="m@example.com"
+                      onChange={handleChange}
+                      disabled={loading}
+                    />
+                    {errors.email && (
+                      <p className="text-red-500 text-sm">{errors.email}</p>
+                    )}
+                  </div>
 
                       <div className="space-y-2">
-                        <Label htmlFor="mobile">Mobile</Label>
-                        <input
-                          className="w-full p-2 border-2 rounded-md bg-background outline-none focus-within:border-blue-700 transition"
-                          value={formValues.mobile}
-                          id="mobile"
-                          name="mobile"
-                          type="text"
-                          maxLength={10}
-                          placeholder="10-digit number"
-                          onChange={handleChange}
-                          disabled={loading}
-                        />
-                        {errors.mobile && (
-                          <p className="text-red-500 text-sm">{errors.mobile}</p>
-                        )}
+                      <Label htmlFor="mobile">Mobile</Label>
+                      <input
+                        className="w-full p-2 border-2 rounded-md bg-background outline-none focus-within:border-blue-700 transition"
+                        value={formValues.mobile}
+                        id="mobile"
+                        name="mobile"
+                        type="text"
+                        maxLength={10}
+                        placeholder="10-digit number"
+                        onChange={handleChange}
+                        disabled={loading}
+                      />
+                      {errors.mobile && (
+                        <p className="text-red-500 text-sm">{errors.mobile}</p>
+                      )}
                       </div>
                     </div>
                   )}

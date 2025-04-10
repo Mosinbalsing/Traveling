@@ -43,7 +43,7 @@ export const API_ENDPOINTS = {
   GET_PAST_BOOKING:"/api/admin/pastbookings",
   UPDATE_USER: '/api/admin/users',
   DELETE_USER: '/api/admin/delete-user',
-  
+  CANCEL_BOOKING: '/api/bookings/cancel',
 };
 
 // Generic function for API requests
@@ -275,6 +275,33 @@ export const bookingAPI = {
       return response;
     } catch (error) {
       console.error("Error searching bookings:", error);
+      throw error;
+    }
+  },
+  cancelBooking: async (bookingId, reason) => {
+    try {
+      const token = localStorage.getItem('adminToken');
+      if (!token) {
+        throw new Error('No authentication token found');
+      }
+
+      const response = await fetch(`${BASE_URL}/api/admin/bookings/cancel/${bookingId}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({ reason }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to cancel booking');
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Error cancelling booking:', error);
       throw error;
     }
   },
