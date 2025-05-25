@@ -12,6 +12,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
+import { BASE_URL } from "@/config/api";
 
 export default function AdminDashboard() {
   const navigate = useNavigate();
@@ -111,8 +112,8 @@ export default function AdminDashboard() {
         throw new Error("No authentication token found");
       }
 
-      console.log("Making API request to:", "http://localhost:3000/api/admin/bookings");
-      const response = await fetch("http://localhost:3000/api/admin/bookings", {
+      console.log("Making API request to:", `${BASE_URL}/api/admin/bookings`);
+      const response = await fetch(`${BASE_URL}/api/admin/bookings`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -206,8 +207,8 @@ export default function AdminDashboard() {
         throw new Error("No authentication token found");
       }
 
-      console.log("Making API request to:", "http://localhost:3000/api/admin/pastbookings");
-      const response = await fetch("http://localhost:3000/api/admin/pastbookings", {
+      console.log("Making API request to:", `${BASE_URL}/api/admin/pastbookings`);
+      const response = await fetch(`${BASE_URL}/api/admin/pastbookings`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -278,8 +279,8 @@ export default function AdminDashboard() {
         throw new Error("No authentication token found");
       }
 
-      console.log("Making API request to:", "http://localhost:3000/api/admin/users");
-      const response = await fetch("http://localhost:3000/api/admin/users", {
+      console.log("Making API request to:", `${BASE_URL}/api/admin/users`);
+      const response = await fetch(`${BASE_URL}/api/admin/users`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -333,8 +334,8 @@ export default function AdminDashboard() {
         throw new Error("No authentication token found");
       }
 
-      console.log("Making API request to:", "http://localhost:3000/api/admin/bookings");
-      const response = await fetch("http://localhost:3000/api/admin/bookings", {
+     
+      const response = await fetch(`${BASE_URL}/api/admin/bookings`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",

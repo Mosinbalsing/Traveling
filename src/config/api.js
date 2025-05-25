@@ -2,7 +2,8 @@ import axios from 'axios';
 
 // Base URL for your API
 // export const BASE_URL = 'https://noble-liberation-production.up.railway.app';
-export const BASE_URL = 'http://localhost:3000';
+export const BASE_URL = 'https://travelbackend-6jgv.onrender.com';
+//export const BASE_URL = 'http://localhost:3000';
 
 // Create an Axios instance with default headers
 const api = axios.create({

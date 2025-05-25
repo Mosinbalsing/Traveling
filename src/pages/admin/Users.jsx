@@ -20,7 +20,7 @@ import { EyeIcon, PencilIcon, TrashIcon } from "@heroicons/react/24/outline";
 import AdminLayout from "@/components/layouts/AdminLayout";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { userAPI } from "@/config/api";
+import { BASE_URL, userAPI } from "@/config/api";
 
 export default function Users() {
   const navigate = useNavigate();
@@ -70,7 +70,7 @@ export default function Users() {
         throw new Error("No authentication token found");
       }
 
-      const response = await fetch("http://localhost:3000/api/admin/users", {
+      const response = await fetch(`${BASE_URL}/api/admin/users`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -125,7 +125,7 @@ export default function Users() {
         throw new Error("No authentication token found");
       }
 
-      const response = await fetch("http://localhost:3000/api/admin/bookings", {
+      const response = await fetch(`${BASE_URL}/api/admin/bookings`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -240,7 +240,7 @@ export default function Users() {
 
       // Log the request details
       console.log("Sending update request:", {
-        url: `http://localhost:3000/api/admin/users/update/${userId}`,
+        url: `${BASE_URL}/api/admin/users/update/${userId}`,
         data: {
           name: editedUser.name,
           email: editedUser.email,
@@ -249,7 +249,7 @@ export default function Users() {
       });
 
       const response = await fetch(
-        `http://localhost:3000/api/admin/users/${userId}`,
+        `${BASE_URL}/api/admin/users/update/${userId}`,
         {
           method: "PUT",
           headers: {
@@ -329,7 +329,7 @@ export default function Users() {
       }
 
       // Make the delete API call
-      const response = await fetch(`http://localhost:3000/api/admin/users/${user.id}`, {
+      const response = await fetch(`${BASE_URL}/api/admin/users/${user.id}`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
