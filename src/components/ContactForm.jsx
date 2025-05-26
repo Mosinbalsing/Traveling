@@ -1,12 +1,66 @@
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { FiPhone } from "react-icons/fi";
 import { MdOutlineMailOutline } from "react-icons/md";
 import { Textarea } from "@/components/ui/textarea";
-import { Mail, Phone } from "lucide-react";
-import React from 'react';
+import { toast } from "react-toastify";
+import { BASE_URL } from "@/config/api";
 
 export default function ContactForm() {
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    subject: "",
+    message: ""
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+
+    try {
+      const response = await fetch(`${BASE_URL}/api/contact/store`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData)
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to send message');
+      }
+
+      // Clear form on success
+      setFormData({
+        name: "",
+        email: "",
+        subject: "",
+        message: ""
+      });
+
+      toast.success("Message sent successfully!");
+
+    } catch (error) {
+      console.error("Error sending message:", error);
+      toast.error(error.message || "Failed to send message");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <div className="container mx-auto px-4 py-12 max-w-[1100px]">
       <div className="grid gap-12 lg:grid-cols-2">
@@ -37,41 +91,53 @@ export default function ContactForm() {
         <div>
           <h2 className="mb-6 text-2xl font-bold font-sans tracking-tight text-[18px]">DROP US A LINE</h2>
           <p className="mb-8 text-muted-foreground text-gray-600 text-[14px] font-sans">
-            Sicut malus voodoo. Aenean a dolor vulnerum aperire accedunt, mortui iam vivam. Qui tardius moveri, sed in
-            magna copia sint terribiles legionis.
+            Have questions or need assistance? Feel free to reach out to us using the form below.
           </p>
-          <form className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-6">
             <div className="grid gap-4 sm:grid-cols-2">
               <Input
                 type="text"
+                name="name"
                 placeholder="Name"
                 required
+                value={formData.name}
+                onChange={handleChange}
                 className="hover:ring-2 hover:ring-orange-500 focus:ring-2 focus:ring-orange-500 rounded-none"
               />
               <Input
                 type="email"
+                name="email"
                 placeholder="E-mail"
                 required
+                value={formData.email}
+                onChange={handleChange}
                 className="hover:ring-2 hover:ring-orange-500 focus:ring-2 focus:ring-orange-500 rounded-none"
               />
             </div>
             <Input
               type="text"
+              name="subject"
               placeholder="Subject"
               required
+              value={formData.subject}
+              onChange={handleChange}
               className="hover:ring-2 hover:ring-orange-500 focus:ring-2 focus:ring-orange-500 rounded-none"
             />
             <Textarea
+              name="message"
               placeholder="Message"
               required
+              value={formData.message}
+              onChange={handleChange}
               className="hover:ring-2 hover:ring-orange-500 focus:ring-2 focus:ring-orange-500 min-h-[150px] rounded-none"
             />
             <div className="mt-5 text-center md:text-left">
               <Button
                 type="submit"
-                className="font-semibold text-sm sm:text-[14px] bg-white transition-all duration-300 text-orange-500 px-4 sm:px-6 py-2 rounded-full mt-4 hover:bg-orange-500 hover:text-white border-2 border-orange-500 inline-block focus:outline-none"
+                disabled={isSubmitting}
+                className="font-semibold text-sm sm:text-[14px] bg-white transition-all duration-300 text-orange-500 px-4 sm:px-6 py-2 rounded-full mt-4 hover:bg-orange-500 hover:text-white border-2 border-orange-500 inline-block focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                BOOK NOW
+                {isSubmitting ? "SENDING..." : "SEND MESSAGE"}
               </Button>
             </div>
           </form>
