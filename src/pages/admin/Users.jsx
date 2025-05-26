@@ -20,7 +20,15 @@ import { EyeIcon, PencilIcon, TrashIcon } from "@heroicons/react/24/outline";
 import AdminLayout from "@/components/layouts/AdminLayout";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { BASE_URL, userAPI } from "@/config/api";
+import { BASE_URL } from "@/config/api";
+import {
+  flexRender,
+  getCoreRowModel,
+  useReactTable,
+  getSortedRowModel,
+  getFilteredRowModel,
+} from "@tanstack/react-table";
+import { ArrowUpDown } from "lucide-react";
 
 export default function Users() {
   const navigate = useNavigate();
@@ -34,6 +42,9 @@ export default function Users() {
   const [isEditing, setIsEditing] = useState(false);
   const [selectedUserBookings, setSelectedUserBookings] = useState([]);
   const [userBookings, setUserBookings] = useState([]);
+  const [selectedBooking, setSelectedBooking] = useState(null);
+  const [showBookingDetails, setShowBookingDetails] = useState(false);
+  const [globalFilter, setGlobalFilter] = useState("");
 
   console.log("selectedUser",selectedUser);
   useEffect(() => {
@@ -53,7 +64,8 @@ export default function Users() {
 
   useEffect(() => {
     if (!showUserDetails) {
-      setUserBookings([]); // Clear user bookings when dialog closes
+      setSelectedUser(null);
+      setUserBookings([]);
     }
   }, [showUserDetails]);
 
@@ -75,43 +87,59 @@ export default function Users() {
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
-        },
+        }
       });
 
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
-      const data = await response.json();
-      console.log("Raw API Response Data:", data);
+      const responseData = await response.json();
+      console.log("Raw API Response Data:", responseData);
 
-      const formattedUsers = data.data.map((user) => ({
-        id: user.user_id,
-        name: user.name,
-        email: user.email,
-        phone: user.mobile,
-        total_bookings: parseInt(user.total_bookings) || 0,
-        active_bookings: parseInt(user.active_bookings) || 0,
-        past_bookings: parseInt(user.past_bookings) || 0,
-        all_bookings: user.all_bookings.map(booking => ({
-          id: booking.booking_id,
-          userId: booking.user_id,
-          travelDate: new Date(booking.travel_date).toLocaleDateString(),
-          vehicleType: booking.vehicle_type,
-          passengers: booking.number_of_passengers,
-          from: booking.pickup_location,
-          to: booking.drop_location,
-          status: booking.status,
-          bookingDate: new Date(booking.booking_date).toLocaleDateString(),
-          bookingType: booking.booking_type
-        }))
-      }));
+      // Check if the data is in the expected format
+      const usersData = responseData.data || responseData;
+      
+      if (!Array.isArray(usersData)) {
+        throw new Error("Invalid data format received from server");
+      }
+
+      // Log the first user's bookings for debugging
+      if (usersData.length > 0) {
+        console.log("First user's bookings:", usersData[0].bookings || usersData[0].all_bookings);
+      }
+
+      const formattedUsers = usersData.map((user) => {
+        console.log("Processing user:", user); // Debug log
+        
+        return {
+          id: user.user_id || user._id || user.id, // Keep original format
+          name: user.name || '',
+          email: user.email || '',
+          phone: user.mobile || user.phone || '',
+          total_bookings: parseInt(user.total_bookings || '0'),
+          active_bookings: parseInt(user.active_bookings || '0'),
+          past_bookings: parseInt(user.past_bookings || '0'),
+          all_bookings: [] // We'll populate this from bookings data
+        };
+      });
 
       console.log("Formatted Users:", formattedUsers);
       setUsers(formattedUsers);
     } catch (error) {
       console.error("Error fetching users:", error);
-      toast.error(error.message || "Failed to load users");
+      
+      // More specific error messages
+      if (!navigator.onLine) {
+        toast.error("No internet connection. Please check your network.");
+      } else if (error.name === 'AbortError') {
+        toast.error("Request timed out. Server may be down.");
+      } else if (error.message.includes('Failed to fetch')) {
+        toast.error("Could not connect to server. Please ensure the backend is running.");
+      } else {
+        toast.error(error.message || "Failed to load users");
+      }
+      
       setUsers([]);
     } finally {
       setIsLoading(false);
@@ -137,25 +165,38 @@ export default function Users() {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
-      const data = await response.json();
-      console.log("Raw Bookings Data:", data);
+      const responseData = await response.json();
+      console.log("Raw Bookings Data bookings user --------:", responseData);
+
+      // Extract the bookings array from the nested structure
+      const bookingsArray = responseData?.data || [];
+      console.log("Bookings Array*********:", bookingsArray); // Debug log
 
       // Transform the data to match your exact API response format
-      const formattedBookings = data.map((booking) => ({
-        id: booking.booking_id,
-        userId: booking.user_id, // Keep this as user_id to match your API
-        travelDate: new Date(booking.travel_date).toLocaleDateString(),
-        vehicleType: booking.vehicle_type,
-        passengers: booking.number_of_passengers,
-        from: booking.pickup_location,
-        to: booking.drop_location,
-        status: booking.status,
-        bookingDate: new Date(booking.booking_date).toLocaleDateString(),
-        bookingType: booking.booking_type
-      }));
+      const formattedBookings = bookingsArray.map((booking) => {
+        // Debug log for each booking's user_id
+        console.log("Booking user_id:", booking.user_id, "Type:", typeof booking.user_id);
+        
+        return {
+          id: booking.booking_id,
+          userId: booking.user_id, // Keep as string if it's a string in the API
+          travelDate: new Date(booking.travel_date).toLocaleDateString(),
+          vehicleType: booking.vehicle_type,
+          passengers: booking.number_of_passengers,
+          from: booking.pickup_location,
+          to: booking.drop_location,
+          status: booking.status,
+          bookingDate: new Date(booking.booking_date).toLocaleDateString(),
+          price: booking.price,
+          userName: booking.user_name,
+          userEmail: booking.user_email,
+          userMobile: booking.user_mobile
+        };
+      });
 
       console.log("Formatted Bookings:", formattedBookings);
       setBookings(formattedBookings);
+
     } catch (error) {
       console.error("Error fetching bookings:", error);
       setBookings([]);
@@ -163,16 +204,30 @@ export default function Users() {
   };
 
   const handleViewUser = (user) => {
-    console.log("Viewing user with ID:", user.id);
-    console.log("User's bookings:", user.all_bookings);
+    console.log("Viewing user with ID:", user.id, "Type:", typeof user.id);
+    console.log("All bookings:", bookings);
     
-    // Use the bookings directly from the user object
-    setUserBookings(user.all_bookings);
-    setSelectedUser({
-      ...user,
-      bookings: user.all_bookings
+    // Convert IDs to strings for comparison
+    const userId = user.id.toString();
+    
+    // Filter bookings for this specific user
+    const userBookings = bookings.filter(booking => {
+      console.log("Comparing booking.userId:", booking.userId, "with user.id:", userId);
+      return booking.userId.toString() === userId;
     });
     
+    console.log("Filtered bookings for user:", userBookings);
+    
+    // Set both the user details and their bookings
+    setSelectedUser({
+      ...user,
+      bookings: userBookings
+    });
+    
+    // Set the bookings separately for the bookings table
+    setUserBookings(userBookings);
+    
+    // Open the dialog
     setShowUserDetails(true);
   };
 
@@ -249,7 +304,7 @@ export default function Users() {
       });
 
       const response = await fetch(
-        `${BASE_URL}/api/admin/users/update/${userId}`,
+        `${BASE_URL}/api/admin/users/${userId}`,
         {
           method: "PUT",
           headers: {
@@ -328,30 +383,53 @@ export default function Users() {
         return;
       }
 
-      // Make the delete API call
-      const response = await fetch(`${BASE_URL}/api/admin/users/${user.id}`, {
+      // Log request details for debugging
+      console.log("Sending delete request for user:", {
+        userId: user.id,
+        reason,
+        url: `${BASE_URL}/api/admin/users/delete/${user.id}`
+      });
+
+      // Use the correct endpoint format matching the backend route
+      const response = await fetch(`${BASE_URL}/api/admin/users/delete/${user.id}`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          'Authorization': `Bearer ${token}`,
+          'Accept': 'application/json'
         },
         body: JSON.stringify({
-          reason: reason,
-          adminEmail: adminEmail
-        })
+          reason: reason
+        }),
+        credentials: 'include' // Include credentials if your API requires them
       });
 
+      // Log response for debugging
+      console.log('Delete response status:', response.status);
+
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Failed to delete user');
+        // Try to get error message from response
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
       }
 
+      const data = await response.json();
+      
       // Update the UI
       setUsers(users.filter((u) => u.id !== user.id));
-      toast.success("User deleted successfully");
+      toast.success(data.message || "User deleted successfully");
+
+      // Refresh the users list
+      await fetchUsers();
     } catch (error) {
       console.error("Error deleting user:", error);
-      if (error.message?.includes('authentication') || error.message?.includes('token')) {
+      
+      // More specific error handling
+      if (!navigator.onLine) {
+        toast.error("No internet connection. Please check your network.");
+      } else if (error.message?.includes('Failed to fetch')) {
+        toast.error("Could not connect to the server. Please try again later.");
+      } else if (error.message?.includes('authentication') || error.message?.includes('token')) {
         toast.error("Session expired. Please login again.");
         navigate("/admin/login");
       } else {
@@ -359,6 +437,179 @@ export default function Users() {
       }
     }
   };
+
+  const handleCancelBooking = async (booking) => {
+    try {
+      // Get cancel reason from user
+      const reason = window.prompt("Please enter reason for cancellation:");
+      if (!reason) {
+        toast.error("Reason is required for cancellation");
+        return;
+      }
+
+      const response = await fetch(`${BASE_URL}/api/admin/bookings/cancel/${booking.id}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('adminToken')}`,
+        },
+        body: JSON.stringify({ reason }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to cancel booking');
+      }
+
+      const result = await response.json();
+      
+      // Update the bookings in state
+      setBookings(prevBookings => 
+        prevBookings.map(b => 
+          b.id === booking.id ? { ...b, status: 'cancelled' } : b
+        )
+      );
+
+      // Update the selected user's bookings
+      if (selectedUser) {
+        setSelectedUser(prev => ({
+          ...prev,
+          bookings: prev.bookings.map(b => 
+            b.id === booking.id ? { ...b, status: 'cancelled' } : b
+          )
+        }));
+      }
+
+      toast.success("Booking cancelled successfully");
+      
+      // Refresh the bookings
+      await fetchBookings();
+    } catch (error) {
+      console.error("Error cancelling booking:", error);
+      toast.error(error.message || "Failed to cancel booking");
+    }
+  };
+
+  const handleViewBooking = (booking) => {
+    setSelectedBooking(booking);
+    setShowBookingDetails(true);
+  };
+
+  const columns = [
+    {
+      accessorKey: "id",
+      header: ({ column }) => {
+        return (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          >
+            User ID
+            <ArrowUpDown className="ml-2 h-4 w-4" />
+          </Button>
+        )
+      },
+    },
+    {
+      accessorKey: "name",
+      header: ({ column }) => {
+        return (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          >
+            Name
+            <ArrowUpDown className="ml-2 h-4 w-4" />
+          </Button>
+        )
+      },
+    },
+    {
+      accessorKey: "email",
+      header: ({ column }) => {
+        return (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          >
+            Email
+            <ArrowUpDown className="ml-2 h-4 w-4" />
+          </Button>
+        )
+      },
+    },
+    {
+      accessorKey: "phone",
+      header: ({ column }) => {
+        return (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          >
+            Phone
+            <ArrowUpDown className="ml-2 h-4 w-4" />
+          </Button>
+        )
+      },
+    },
+    {
+      accessorKey: "total_bookings",
+      header: ({ column }) => {
+        return (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          >
+            Total Bookings
+            <ArrowUpDown className="ml-2 h-4 w-4" />
+          </Button>
+        )
+      },
+    },
+    {
+      id: "actions",
+      header: "Actions",
+      cell: ({ row }) => (
+        <div className="flex space-x-2">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => handleViewUser(row.original)}
+          >
+            <EyeIcon className="h-5 w-5" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => handleEditUser(row.original)}
+            className="text-blue-600 hover:text-blue-800"
+          >
+            <PencilIcon className="h-5 w-5" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => handleDeleteUser(row.original)}
+            className="text-red-600 hover:text-red-800"
+          >
+            <TrashIcon className="h-5 w-5" />
+          </Button>
+        </div>
+      ),
+    },
+  ];
+
+  const table = useReactTable({
+    data: users,
+    columns,
+    getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
+    state: {
+      globalFilter,
+    },
+    onGlobalFilterChange: setGlobalFilter,
+  });
 
   if (isLoading) {
     return (
@@ -376,68 +627,52 @@ export default function Users() {
         </div>
 
         <div className="bg-white rounded-lg shadow mb-8">
+          <div className="p-4 border-b">
+            <Input
+              placeholder="Search users..."
+              value={globalFilter ?? ""}
+              onChange={(e) => setGlobalFilter(e.target.value)}
+              className="max-w-sm"
+            />
+          </div>
           <Table>
             <TableHeader>
-              <TableRow>
-                <TableHead>User ID</TableHead>
-                <TableHead>Name</TableHead>
-                <TableHead>Email</TableHead>
-                <TableHead>Phone</TableHead>
-                <TableHead>Total Bookings</TableHead>
-               
-                <TableHead>Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {users.map((user) => (
-                <TableRow key={user.id}>
-                  <TableCell>{user.id}</TableCell>
-                  <TableCell>{user.name}</TableCell>
-                  <TableCell>{user.email}</TableCell>
-                  <TableCell>{user.phone}</TableCell>
-                  <TableCell>{user.total_bookings}</TableCell>
-                  
-                  <TableCell>
-                    <div className="flex space-x-2">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleViewUser(user)}
-                      >
-                        <EyeIcon className="h-5 w-5" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => {
-                          console.log("Full user data:", user); // Debug log
-                          if (user) {
-                            handleEditUser(user);
-                          } else {
-                            toast.error("Cannot edit: Invalid user data");
-                          }
-                        }}
-                        className="text-blue-600 hover:text-blue-800 hover:bg-blue-50 transition-colors duration-200"
-                      >
-                        <PencilIcon className="h-5 w-5" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleDeleteUser(user)}
-                        className="text-red-600 hover:text-red-800"
-                      >
-                        <TrashIcon className="h-5 w-5" />
-                      </Button>
-                    </div>
-                  </TableCell>
+              {table.getHeaderGroups().map((headerGroup) => (
+                <TableRow key={headerGroup.id}>
+                  {headerGroup.headers.map((header) => (
+                    <TableHead key={header.id}>
+                      {header.isPlaceholder
+                        ? null
+                        : flexRender(
+                            header.column.columnDef.header,
+                            header.getContext()
+                          )}
+                    </TableHead>
+                  ))}
                 </TableRow>
               ))}
+            </TableHeader>
+            <TableBody>
+              {table.getRowModel().rows?.length ? (
+                table.getRowModel().rows.map((row) => (
+                  <TableRow key={row.id} data-state={row.getIsSelected() && "selected"}>
+                    {row.getVisibleCells().map((cell) => (
+                      <TableCell key={cell.id}>
+                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={columns.length} className="h-24 text-center">
+                    No results.
+                  </TableCell>
+                </TableRow>
+              )}
             </TableBody>
           </Table>
         </div>
-
-        {/* Bookings Table */}
 
         {/* User Details Dialog */}
         <Dialog open={showUserDetails} onOpenChange={setShowUserDetails}>
@@ -481,9 +716,8 @@ export default function Users() {
 
                 {/* User's Bookings */}
                 <div className="mt-6">
-                  <h3 className="text-lg font-semibold mb-4">User's Bookings</h3>
-                  {console.log("Current user bookings:", userBookings)}
-                  {userBookings.length > 0 ? (
+                  <h3 className="text-lg font-semibold mb-4">User&apos;s Bookings</h3>
+                  {selectedUser?.bookings && selectedUser.bookings.length > 0 ? (
                     <div className="overflow-x-auto bg-white">
                       <Table>
                         <TableHeader>
@@ -495,10 +729,12 @@ export default function Users() {
                             <TableHead>Status</TableHead>
                             <TableHead>Passengers</TableHead>
                             <TableHead>Vehicle Type</TableHead>
+                            <TableHead>Price</TableHead>
+                            <TableHead>Actions</TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
-                          {userBookings.map((booking) => (
+                          {selectedUser.bookings.map((booking) => (
                             <TableRow key={booking.id}>
                               <TableCell>{booking.id}</TableCell>
                               <TableCell>{booking.travelDate}</TableCell>
@@ -511,6 +747,8 @@ export default function Users() {
                                       ? "bg-green-100 text-green-800"
                                       : booking.status === "pending"
                                       ? "bg-yellow-100 text-yellow-800"
+                                      : booking.status === "cancelled"
+                                      ? "bg-red-100 text-red-800"
                                       : "bg-gray-100 text-gray-800"
                                   }`}
                                 >
@@ -519,6 +757,28 @@ export default function Users() {
                               </TableCell>
                               <TableCell>{booking.passengers} passengers</TableCell>
                               <TableCell>{booking.vehicleType}</TableCell>
+                              <TableCell>₹{booking.price}</TableCell>
+                              <TableCell>
+                                <div className="flex space-x-2">
+                                  {booking.status !== 'cancelled' && (
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() => handleCancelBooking(booking)}
+                                      className="text-red-600 hover:text-red-800"
+                                    >
+                                      Cancel
+                                    </Button>
+                                  )}
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => handleViewBooking(booking)}
+                                  >
+                                    View
+                                  </Button>
+                                </div>
+                              </TableCell>
                             </TableRow>
                           ))}
                         </TableBody>
@@ -636,6 +896,54 @@ export default function Users() {
             ) : (
               <div className="text-center py-4">
                 <p className="text-gray-500">No user data available</p>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
+
+        {/* Booking Details Dialog */}
+        <Dialog open={showBookingDetails} onOpenChange={setShowBookingDetails}>
+          <DialogContent className="max-w-3xl">
+            <DialogHeader>
+              <DialogTitle>Booking Details</DialogTitle>
+            </DialogHeader>
+            {selectedBooking && (
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <h3 className="font-semibold">Booking Information</h3>
+                    <p>Booking ID: {selectedBooking.id}</p>
+                    <p>Status: {selectedBooking.status}</p>
+                    <p>Price: ₹{selectedBooking.price}</p>
+                  </div>
+                  <div>
+                    <h3 className="font-semibold">Travel Details</h3>
+                    <p>Date: {selectedBooking.travelDate}</p>
+                    <p>From: {selectedBooking.from}</p>
+                    <p>To: {selectedBooking.to}</p>
+                  </div>
+                  <div>
+                    <h3 className="font-semibold">Vehicle Details</h3>
+                    <p>Type: {selectedBooking.vehicleType}</p>
+                    <p>Passengers: {selectedBooking.passengers}</p>
+                  </div>
+                </div>
+                <div className="flex justify-end space-x-2">
+                  <Button variant="outline" onClick={() => setShowBookingDetails(false)}>
+                    Close
+                  </Button>
+                  {selectedBooking.status !== 'cancelled' && (
+                    <Button
+                      variant="destructive"
+                      onClick={() => {
+                        handleCancelBooking(selectedBooking);
+                        setShowBookingDetails(false);
+                      }}
+                    >
+                      Cancel Booking
+                    </Button>
+                  )}
+                </div>
               </div>
             )}
           </DialogContent>

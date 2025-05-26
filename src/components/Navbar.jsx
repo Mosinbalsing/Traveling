@@ -39,9 +39,9 @@ const Navbar = () => {
   // Sidebar Navigation Items
   const sidebarItems = [
     { name: "Home", path: "/" },
-    { name: "Booking", path: "/booking" },
-    { name: "Services", path: "/services" },
-    { name: "Cars", path: "/cars" },
+    // { name: "Booking", path: "/booking" },
+    // { name: "Services", path: "/services" },
+    // { name: "Cars", path: "/cars" },
     { name: "Contact", path: "/contact" },
     { name: "Admin", path: "/admin/login" },
   ];
@@ -59,12 +59,12 @@ const Navbar = () => {
           <div className="contacts flex gap-4 md:gap-10 justify-center">
             <div className="phone flex gap-3 items-center">
               <FiPhone className="text-white" />
-              <p className="text-white text-sm md:text-base">+091 234 5678</p>
+              <p className="text-white text-sm md:text-base">+91 9730260479</p>
             </div>
             <div className="phone flex gap-3 items-center">
               <MdOutlineMailOutline className="text-white" />
               <p className="text-white text-sm md:text-base">
-                info@carhire.com
+                info@shreetravels.com
               </p>
             </div>
           </div>
@@ -103,9 +103,11 @@ const Navbar = () => {
           <ul className="hidden md:flex gap-12 h-full w-auto items-center font-bold text-gray-600 justify-around">
             {[
               { name: "Home", path: "/" },
-              { name: "Booking", path: "/booking" },
-              { name: "Services", path: "/services" },
-              { name: "Cars", path: "/cars" },
+              // { name: "Booking", path: "/booking" },
+              // { name: "Services", path: "/services" },
+              // { name: "Cars", path: "/cars" },
+              // { name: "About", path: "/about" },
+              { name: "Contact", path: "/contact" },
               { name: "Admin", path: "/admin/login" },
             ].map((item) => (
               <li key={item.path}>
